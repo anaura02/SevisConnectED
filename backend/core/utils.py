@@ -40,3 +40,4 @@ def error_response(message: str, http_status: int = status.HTTP_400_BAD_REQUEST)
     """Create an error response"""
     return Response(format_api_response(message=message, success=False), status=http_status)
 
+

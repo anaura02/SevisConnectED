@@ -10,6 +10,7 @@ from .serializers import (
     LearningPathSerializer, ChatSessionSerializer, ProgressSerializer
 )
 from .utils import success_response, error_response
+from .ai_services import analyze_weaknesses, generate_study_plan, tutor_chat
 
 
 class LoginView(APIView):
@@ -128,7 +129,6 @@ class AnalyzeWeaknessesView(APIView):
     POST /api/analyze/weaknesses/
     Analyze diagnostic results and generate weakness profile
     PRD: Real-time Weakness Detection
-    Note: This will call AI service (to be implemented)
     """
     def post(self, request):
         sevis_pass_id = request.data.get('sevis_pass_id')
@@ -147,23 +147,31 @@ class AnalyzeWeaknessesView(APIView):
         if not diagnostics.exists():
             return error_response('No diagnostic results found. Please complete diagnostic test first.', http_status=404)
         
-        # TODO: Call AI service to analyze weaknesses
-        # For now, return a basic analysis
-        correct_count = diagnostics.filter(is_correct=True).count()
-        total_count = diagnostics.count()
-        baseline_score = (correct_count / total_count * 100) if total_count > 0 else 0.0
+        # Prepare diagnostic data for AI analysis
+        diagnostic_data = [
+            {
+                'subject': d.subject,
+                'question': d.question,
+                'student_answer': d.student_answer,
+                'correct_answer': d.correct_answer,
+                'is_correct': d.is_correct,
+            }
+            for d in diagnostics
+        ]
         
-        # Create or update weakness profile
-        # This will be enhanced when AI service is implemented
+        # Call AI service to analyze weaknesses
+        analysis_result = analyze_weaknesses(diagnostic_data)
+        
+        # Create or update weakness profile with AI results
         weakness_profile, created = WeaknessProfile.objects.update_or_create(
             user=user,
             subject=subject,
             defaults={
-                'weaknesses': {},  # Will be populated by AI
-                'strengths': {},   # Will be populated by AI
-                'baseline_score': baseline_score,
-                'confidence_score': 0.5,
-                'recommended_difficulty': 'beginner' if baseline_score < 50 else 'intermediate' if baseline_score < 75 else 'advanced',
+                'weaknesses': analysis_result.get('weaknesses', {}),
+                'strengths': analysis_result.get('strengths', {}),
+                'baseline_score': analysis_result.get('baseline_score', 0.0),
+                'confidence_score': analysis_result.get('confidence_score', 0.5),
+                'recommended_difficulty': analysis_result.get('recommended_difficulty', 'beginner'),
             }
         )
         
@@ -178,7 +186,6 @@ class GenerateStudyPlanView(APIView):
     POST /api/generate/study-plan/
     Generate personalized learning path based on weakness profile
     PRD: Personalized Learning Path
-    Note: This will call AI service (to be implemented)
     """
     def post(self, request):
         sevis_pass_id = request.data.get('sevis_pass_id')
@@ -201,26 +208,24 @@ class GenerateStudyPlanView(APIView):
                 http_status=404
             )
         
-        # TODO: Call AI service to generate learning path
-        # For now, return a basic learning path structure
+        # Call AI service to generate learning path
+        path_data = generate_study_plan(
+            weakness_profile={
+                'weaknesses': weakness_profile.weaknesses,
+                'strengths': weakness_profile.strengths,
+                'recommended_difficulty': weakness_profile.recommended_difficulty,
+            },
+            subject=subject,
+            grade_level=user.grade_level
+        )
+        
+        # Create or update learning path with AI-generated data
         learning_path, created = LearningPath.objects.update_or_create(
             user=user,
             subject=subject,
             defaults={
-                'week_plan': {
-                    'week_1': {
-                        'focus': 'Foundation review',
-                        'topics': ['Basic concepts'],
-                        'goals': ['Build confidence', 'Review fundamentals']
-                    }
-                },
-                'daily_tasks': {
-                    'day_1': {
-                        'lesson': 'Introduction to key concepts',
-                        'practice': ['Practice exercise 1'],
-                        'estimated_time': '30 minutes'
-                    }
-                },
+                'week_plan': path_data.get('week_plan', {}),
+                'daily_tasks': path_data.get('daily_tasks', {}),
                 'status': 'active',
             }
         )
@@ -276,9 +281,12 @@ class TutorChatView(APIView):
         }
         chat_session.context = context
         
-        # TODO: Call AI service to generate response
-        # For now, return a placeholder response
-        ai_response = "I'm your AI tutor! This feature will be fully functional once the AI service is integrated. How can I help you learn?"
+        # Call AI service to generate response
+        ai_response = tutor_chat(
+            user_message=message,
+            chat_history=chat_session.messages[:-1],  # Exclude current message
+            context=context
+        )
         
         # Add AI response to history
         chat_session.messages.append({

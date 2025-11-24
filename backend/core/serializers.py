@@ -73,3 +73,4 @@ class ProgressSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'user_id', 'subject', 'metric_name', 'metric_value', 'recorded_at']
         read_only_fields = ['id', 'recorded_at']
 
+
