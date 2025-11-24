@@ -113,6 +113,7 @@ export interface ApiResponse<T = any> {
 // Login request
 export interface LoginRequest {
   sevis_pass_id: string;
+  password: string;
   name?: string;
   grade_level?: number;
   school?: string;

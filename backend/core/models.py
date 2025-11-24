@@ -11,6 +11,7 @@ class User(models.Model):
     """
     Student user model linked to SevisPass ID
     PRD: Users (id UUID from SevisPass, name, grade_level, school, email)
+    Enhanced: Added password field for MVP authentication
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     sevis_pass_id = models.CharField(max_length=255, unique=True, db_index=True)
@@ -18,6 +19,7 @@ class User(models.Model):
     grade_level = models.IntegerField(choices=[(11, 'Grade 11'), (12, 'Grade 12')])
     school = models.CharField(max_length=255)
     email = models.EmailField(blank=True, null=True)
+    password = models.CharField(max_length=255, default='', help_text="Hashed password for MVP")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -12,6 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'sevis_pass_id', 'name', 'grade_level', 'school', 'email', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
+        # Note: password is excluded from serializer for security
 
 
 class DiagnosticSerializer(serializers.ModelSerializer):

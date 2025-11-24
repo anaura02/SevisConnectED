@@ -4,6 +4,7 @@ Implements all endpoints according to PRD requirements
 """
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.hashers import make_password, check_password
 from .models import User, Diagnostic, WeaknessProfile, LearningPath, ChatSession, Progress
 from .serializers import (
     UserSerializer, DiagnosticSerializer, WeaknessProfileSerializer,
@@ -18,9 +19,11 @@ class LoginView(APIView):
     POST /api/auth/login/
     Handle SevisPass login - creates or retrieves user
     PRD: Student Login (via SevisPass)
+    Enhanced: Added password authentication for MVP
     """
     def post(self, request):
         sevis_pass_id = request.data.get('sevis_pass_id')
+        password = request.data.get('password', '')
         name = request.data.get('name')
         grade_level = request.data.get('grade_level', 11)
         school = request.data.get('school', '')
@@ -29,33 +32,62 @@ class LoginView(APIView):
         if not sevis_pass_id:
             return error_response('SevisPass ID is required')
         
-        # Get or create user
-        user, created = User.objects.get_or_create(
-            sevis_pass_id=sevis_pass_id,
-            defaults={
-                'name': name or f'Student {sevis_pass_id[:8]}',
-                'grade_level': grade_level,
-                'school': school,
-                'email': email,
-            }
-        )
+        if not password:
+            return error_response('Password is required')
         
-        # Update user if provided
-        if name and user.name != name:
-            user.name = name
-        if school and user.school != school:
-            user.school = school
-        if email and user.email != email:
-            user.email = email
-        if grade_level and user.grade_level != grade_level:
-            user.grade_level = grade_level
-        user.save()
-        
-        return success_response(
-            data=UserSerializer(user).data,
-            message='Login successful' if created else 'User retrieved',
-            http_status=201 if created else 200
-        )
+        # Try to get existing user
+        try:
+            user = User.objects.get(sevis_pass_id=sevis_pass_id)
+            
+            # Check password
+            if user.password:
+                # User has a password set, verify it
+                if not check_password(password, user.password):
+                    return error_response('Invalid SevisPass ID or password', http_status=401)
+            else:
+                # User exists but no password set (legacy user), set default password
+                user.password = make_password('123456')
+                user.save()
+            
+            # Update user info if provided
+            updated = False
+            if name and user.name != name:
+                user.name = name
+                updated = True
+            if school and user.school != school:
+                user.school = school
+                updated = True
+            if email and user.email != email:
+                user.email = email
+                updated = True
+            if grade_level and user.grade_level != grade_level:
+                user.grade_level = grade_level
+                updated = True
+            if updated:
+                user.save()
+            
+            return success_response(
+                data=UserSerializer(user).data,
+                message='Login successful',
+                http_status=200
+            )
+            
+        except User.DoesNotExist:
+            # Create new user with hashed password
+            user = User.objects.create(
+                sevis_pass_id=sevis_pass_id,
+                name=name or f'Student {sevis_pass_id[:8]}',
+                grade_level=grade_level,
+                school=school,
+                email=email,
+                password=make_password(password)  # Hash the password
+            )
+            
+            return success_response(
+                data=UserSerializer(user).data,
+                message='Account created and login successful',
+                http_status=201
+            )
 
 
 class StudentProfileView(APIView):

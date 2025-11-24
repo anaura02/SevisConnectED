@@ -9,7 +9,7 @@ import { authApi } from '../api/services';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (sevisPassId: string, name?: string, gradeLevel?: number, school?: string, email?: string) => Promise<void>;
+  login: (sevisPassId: string, password: string, name?: string, gradeLevel?: number, school?: string, email?: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -56,6 +56,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (
     sevisPassId: string,
+    password: string,
     name?: string,
     gradeLevel?: number,
     school?: string,
@@ -65,6 +66,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
       const response = await authApi.login({
         sevis_pass_id: sevisPassId,
+        password,
         name,
         grade_level: gradeLevel,
         school,

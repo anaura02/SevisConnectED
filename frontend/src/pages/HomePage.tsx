@@ -2,9 +2,21 @@
  * Home Page - Landing page for SevisConnectED
  * Modern, tech-focused design
  */
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export const HomePage: React.FC = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // If user is logged in, show a different CTA
+  const handleGetStarted = () => {
+    if (user) {
+      navigate('/dashboard');
+    } else {
+      navigate('/login');
+    }
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-50">
       {/* Hero Section */}
@@ -22,18 +34,20 @@ export const HomePage: React.FC = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/login"
+            <button
+              onClick={handleGetStarted}
               className="bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg"
             >
-              Get Started
-            </Link>
-            <Link
-              to="/login"
-              className="bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors border-2 border-primary-600"
-            >
-              Student Login
-            </Link>
+              {user ? 'Go to Dashboard' : 'Get Started'}
+            </button>
+            {!user && (
+              <Link
+                to="/login"
+                className="bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors border-2 border-primary-600 text-center"
+              >
+                Student Login
+              </Link>
+            )}
           </div>
         </div>
 
