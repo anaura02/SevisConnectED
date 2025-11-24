@@ -29,6 +29,23 @@ cd backend
 python manage.py create_mock_students
 ```
 
+## Populate Mock Data
+
+To populate all students with mock data (diagnostics, weaknesses, learning paths, progress):
+
+```bash
+cd backend
+python manage.py populate_mock_data
+```
+
+This will create:
+- **Diagnostic Results**: 10-15 questions per student (Math & English)
+- **Weakness Profiles**: AI-analyzed weaknesses and strengths for each subject
+- **Learning Paths**: Personalized week-by-week study plans
+- **Progress Records**: 30 days of activity tracking
+
+**Note**: Run `create_mock_students` first, then `populate_mock_data` to fill in all the data.
+
 ## Notes
 
 - These are pre-created in the database
