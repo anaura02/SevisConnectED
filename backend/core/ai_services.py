@@ -17,8 +17,29 @@ def get_openai_client():
     if _client is None and settings.OPENAI_API_KEY:
         try:
             from openai import OpenAI
-            _client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        except Exception:
+            import httpx
+            import os
+            
+            # Strip whitespace and remove quotes if present
+            api_key = settings.OPENAI_API_KEY.strip().strip('"').strip("'")
+            if api_key and api_key != 'your-openai-api-key-here':
+                # Create httpx client without proxy settings to avoid compatibility issues
+                http_client = httpx.Client(
+                    timeout=60.0,
+                    # Explicitly don't pass proxies to avoid the error
+                )
+                
+                # Initialize OpenAI client with explicit http_client
+                _client = OpenAI(
+                    api_key=api_key,
+                    http_client=http_client,
+                )
+            else:
+                _client = None
+        except Exception as e:
+            print(f"Error creating OpenAI client: {e}")
+            import traceback
+            traceback.print_exc()
             _client = None
     return _client
 

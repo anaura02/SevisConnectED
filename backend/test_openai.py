@@ -31,6 +31,14 @@ print()
 
 # Try to create OpenAI client
 try:
+    # Check API key format
+    api_key_clean = api_key.strip().strip('"').strip("'")
+    if api_key_clean != api_key:
+        print(f"⚠ WARNING: API key has extra characters (quotes/whitespace)")
+        print(f"  Original: {repr(api_key)}")
+        print(f"  Cleaned:  {repr(api_key_clean)}")
+        print()
+    
     client = get_openai_client()
     if client:
         print("✓ OpenAI client created successfully!")
@@ -38,25 +46,45 @@ try:
         
         # Test a simple API call
         print("Testing API call...")
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": "Say 'Hello, SevisConnectED!' if you can read this."}
-            ],
-            max_tokens=20
-        )
-        
-        ai_response = response.choices[0].message.content
-        print(f"✓ API call successful!")
-        print(f"  Response: {ai_response}")
-        print()
-        print("=" * 60)
-        print("✓ OPENAI IS WORKING CORRECTLY!")
-        print("=" * 60)
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": "Say 'Hello, SevisConnectED!' if you can read this."}
+                ],
+                max_tokens=20
+            )
+            
+            ai_response = response.choices[0].message.content
+            print(f"✓ API call successful!")
+            print(f"  Response: {ai_response}")
+            print()
+            print("=" * 60)
+            print("✓ OPENAI IS WORKING CORRECTLY!")
+            print("=" * 60)
+        except Exception as api_error:
+            print(f"✗ API call failed: {type(api_error).__name__}: {str(api_error)}")
+            print()
+            print("This could mean:")
+            print("- Invalid API key")
+            print("- No credits in OpenAI account")
+            print("- Rate limit exceeded")
+            print("- Network connection issue")
     else:
         print("✗ ERROR: Could not create OpenAI client")
-        print("  Check your API key format")
+        print()
+        print("Check your .env file:")
+        print("1. Make sure the line looks exactly like this:")
+        print("   OPENAI_API_KEY=sk-proj-xxxxxxxxxxxx")
+        print()
+        print("2. Common mistakes to avoid:")
+        print("   ❌ OPENAI_API_KEY=\"sk-proj-xxx\"  (no quotes)")
+        print("   ❌ OPENAI_API_KEY = sk-proj-xxx   (no spaces)")
+        print("   ❌ OPENAI_API_KEY=sk-proj-xxx    (extra spaces at end)")
+        print()
+        print("3. Correct format:")
+        print("   ✅ OPENAI_API_KEY=sk-proj-xxxxxxxxxxxx")
 except Exception as e:
     print(f"✗ ERROR: {type(e).__name__}: {str(e)}")
     print()
