@@ -116,7 +116,10 @@ REST_FRAMEWORK = {
 # CORS settings (for frontend integration)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Vite default port
+    "http://localhost:5174",  # Vite alternate port
     "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
