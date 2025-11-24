@@ -1,0 +1,220 @@
+---
+alwaysApply: true
+---
+
+# ============================================================
+#  Cursor Project Rules for SevisConnectED — AI Teacher System
+# ============================================================
+
+# ================
+# 1. ARCHITECTURE
+# ================
+The project uses the following architecture:
+- Frontend: React + TypeScript + TailwindCSS
+- Backend: Django + Django REST Framework
+- Database: PostgreSQL
+- AI Engine: OpenAI API (called only from backend)
+- Deployment: Oracle Cloud Sandbox (optional)
+- Communication: REST API only
+
+Frontend and backend must remain fully separated. 
+Frontend must never call OpenAI directly.
+
+All AI logic must live inside backend/core/ai_services.py.
+
+# ================
+# 2. FRONTEND RULES
+# ================
+Frontend is built with:
+- React (functional components only)
+- TypeScript
+- TailwindCSS
+- React Context for auth and study plan state
+- Axios for all API calls
+
+Required folder structure:
+
+/frontend
+  /src
+    /components
+    /pages
+    /context
+    /api
+    /types
+    /hooks
+
+Component rules:
+- Must use functional components and React hooks.
+- Keep components small and modular.
+- No inline CSS; only Tailwind.
+- Use TypeScript interfaces for all props and API responses.
+- API calls must be made using a single axios client: src/api/apiClient.ts.
+
+Pages that must be included:
+- LoginPage
+- DashboardPage
+- AIStudyPlanPage
+- AITutorChatPage
+- ProgressTrackingPage
+- AdminMockPage (for demo data)
+
+Environment rules:
+- Use VITE_API_URL for backend URL.
+- No hardcoded endpoints.
+
+Frontend-to-backend communication:
+- All endpoints begin with /api/.
+- Always use async/await.
+- Always handle loading + error states.
+
+# ===================
+# 3. BACKEND (DJANGO)
+# ===================
+Backend uses:
+- Django
+- Django REST Framework
+- psycopg2 + PostgreSQL
+- python-dotenv or decouple for local env
+
+Backend folder structure:
+
+/backend
+  manage.py
+  requirements.txt
+  /core
+    /models
+    /serializers
+    /views
+    ai_services.py
+    utils.py
+  /config
+
+Backend must follow DRF patterns:
+- Use serializers for all model input/output.
+- Use class-based API views or APIView.
+
+Environment rules:
+- DATABASE_URL for Postgres
+- OPENAI_API_KEY for OpenAI
+- Never hardcode secrets.
+
+Models that must be defined:
+- Student
+- LearningWeakness
+- StudyPlan
+- TutorSession
+
+# ===================
+# 4. AI LOGIC (RULES)
+# ===================
+All AI logic must be inside backend/core/ai_services.py.
+
+Functions required:
+- analyze_weaknesses(student_id)
+- generate_study_plan(student_id)
+- tutor_chat(student_id, user_message)
+
+AI models:
+- gpt-4.1-mini for quick tasks
+- gpt-4.1 for study plan generation
+- gpt-o1 or gpt-4.1 for tutor explanations (if allowed)
+
+Prompting rules:
+- Use a SYSTEM message describing the AI as an adaptive PNG senior secondary tutor.
+- Pass student data and context.
+- Output strictly formatted JSON.
+
+Backend must validate all AI responses and convert them to clean JSON before returning.
+
+# ===================
+# 5. API ENDPOINT RULES
+# ===================
+Required REST endpoints:
+
+POST /api/auth/login/
+POST /api/student/profile/
+
+POST /api/analyze/weaknesses/
+POST /api/generate/study-plan/
+POST /api/tutor/chat/
+
+GET /api/progress/
+
+API response format:
+
+{
+  "status": "success",
+  "data": { ... }
+}
+
+Naming conventions:
+- snake_case in backend
+- camelCase in frontend
+
+# =============================
+# 6. POSTGRES DATABASE RULES
+# =============================
+All backend database actions must go through Django ORM.
+
+Models must include timestamps:
+created_at, updated_at.
+
+JSON fields use:
+from django.contrib.postgres.fields import JSONField
+
+# ============================================
+# 7. DEPLOYMENT RULES (Oracle Cloud Sandbox)
+# ============================================
+Backend must:
+- Use gunicorn
+- Use environment variables
+- Set ALLOWED_HOSTS = ["*"] (hackathon mode)
+- Use whitenoise only if serving React build
+
+Frontend:
+- Must be built using: npm run build
+- Build folder must be deploy-ready
+
+Optional: Dockerfiles may be generated if requested.
+
+# =============================
+# 8. CODING STANDARDS & STYLE
+# =============================
+Frontend:
+- TypeScript only
+- Components < 60 lines
+- No any types
+- Use interfaces for API data
+- Use Tailwind utility classes only
+
+Backend:
+- Use Python type hints everywhere
+- Functions < 60 lines
+- No business logic in views
+- Put reusable logic in utils.py
+- Put AI logic in ai_services.py only
+
+General:
+- No duplicate code
+- Use docstrings for functions
+- Make code readable and maintainable
+
+# =============================
+# 9. HACKATHON SCOPE PRIORITIES
+# =============================
+
+Must-have features (Day 1–2):
+1. Login (mock SevisPass)
+2. Student dashboard
+3. Weakness analysis (AI)
+4. Personalized study plan (AI)
+5. AI tutor chat
+
+Optional enhancements if time allows:
+- Progress tracking
+- Admin mock panel
+- Graphs & analytics
+- Deployment to Oracle sandbox
+
+# End of .cursorrules
+
