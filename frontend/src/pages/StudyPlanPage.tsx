@@ -9,6 +9,7 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useStudyPlan } from '../context/StudyPlanContext';
 import { VideoPlayer } from '../components/VideoPlayer';
+import { FloatingChatbot } from '../components/FloatingChatbot';
 import type { WeaknessProfile, LearningPath, Syllabus, LearningMaterial } from '../types';
 
 export const StudyPlanPage: React.FC = () => {
@@ -722,6 +723,9 @@ export const StudyPlanPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Floating Chatbot */}
+      <FloatingChatbot subject={subject} />
     </div>
   );
 };
