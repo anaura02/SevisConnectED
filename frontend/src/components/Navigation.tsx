@@ -28,51 +28,54 @@ export const Navigation: React.FC = () => {
           </Link>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center space-x-6">
-            <Link
-              to="/dashboard"
-              className="text-gray-700 hover:text-primary-600 transition-colors"
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/diagnostic"
-              className="text-gray-700 hover:text-primary-600 transition-colors"
-            >
-              Diagnostic Test
-            </Link>
-            <Link
-              to="/study-plan"
-              className="text-gray-700 hover:text-primary-600 transition-colors"
-            >
-              Study Plan
-            </Link>
-            <Link
-              to="/tutor"
-              className="text-gray-700 hover:text-primary-600 transition-colors"
-            >
-              AI Tutor
-            </Link>
-            <Link
-              to="/progress"
-              className="text-gray-700 hover:text-primary-600 transition-colors"
-            >
-              Progress
-            </Link>
-          </div>
+              <div className="hidden md:flex items-center space-x-1">
+                <Link
+                  to="/dashboard"
+                  className="px-4 py-2 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all font-medium"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/diagnostic"
+                  className="px-4 py-2 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all font-medium"
+                >
+                  Diagnostic
+                </Link>
+                <Link
+                  to="/study-plan"
+                  className="px-4 py-2 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all font-medium"
+                >
+                  Study Plan
+                </Link>
+                <Link
+                  to="/tutor"
+                  className="px-4 py-2 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all font-medium"
+                >
+                  AI Tutor
+                </Link>
+                <Link
+                  to="/progress"
+                  className="px-4 py-2 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all font-medium"
+                >
+                  Progress
+                </Link>
+              </div>
 
           {/* User Menu */}
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600 hidden sm:block">
-              {user.name}
-            </span>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-gray-600 hover:text-primary-600 transition-colors"
-            >
-              Logout
-            </button>
-          </div>
+              <div className="flex items-center space-x-4">
+                <div className="hidden sm:flex items-center space-x-2 bg-gray-50 px-3 py-1.5 rounded-lg">
+                  <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-semibold">{user.name.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">{user.name}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-primary-50 px-3 py-2 rounded-lg transition-all"
+                >
+                  Logout
+                </button>
+              </div>
         </div>
       </div>
     </nav>
