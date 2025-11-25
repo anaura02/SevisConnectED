@@ -1,5 +1,5 @@
 /**
- * TypeScript type definitions for SevisConnectED
+ * TypeScript type definitions for AI Teacher
  * Matches backend models and API responses
  */
 
@@ -19,7 +19,7 @@ export interface User {
 export interface Diagnostic {
   id: string;
   user: string;
-  subject: 'math' | 'english';
+  subject: 'math';
   question: string;
   student_answer: string;
   correct_answer: string;
@@ -30,7 +30,7 @@ export interface Diagnostic {
 }
 
 export interface DiagnosticAnswer {
-  subject: 'math' | 'english';
+  subject: 'math';
   question: string;
   student_answer: string;
   correct_answer: string;
@@ -43,7 +43,7 @@ export interface DiagnosticAnswer {
 export interface WeaknessProfile {
   id: string;
   user: string;
-  subject: 'math' | 'english';
+  subject: 'math';
   weaknesses: Record<string, number>; // { "algebra": 0.8, "geometry": 0.6 }
   strengths: Record<string, number>; // { "arithmetic": 0.9 }
   baseline_score: number;
@@ -66,10 +66,75 @@ export interface DailyTask {
   estimated_time: string;
 }
 
+export interface Syllabus {
+  title: string;
+  overview: string;
+  duration?: string;
+  total_hours?: string;
+  modules: Array<{
+    module_number: number;
+    title: string;
+    description: string;
+    topics: string[];
+    learning_objectives: string[];
+    estimated_time: string;
+    prerequisites?: string[];
+    outcomes?: string[];
+  }>;
+}
+
+export interface LearningMaterial {
+  lecture_notes?: Array<{
+    title: string;
+    content: string;
+    key_concepts: string[];
+    examples?: Array<{
+      problem: string;
+      solution: string;
+      explanation: string;
+    }>;
+    practice_problems?: string[];
+    common_mistakes?: string[];
+  }>;
+  videos?: Array<{
+    title: string;
+    description: string;
+    key_points: string[];
+    duration: string;
+    recommended_resources: string[];
+    what_to_focus_on?: string;
+  }>;
+  practice_exercises?: Array<{
+    title: string;
+    description: string;
+    difficulty_level?: string;
+    questions: Array<{
+      question: string;
+      hints?: string[];
+      solution: string;
+      explanation: string;
+    }>;
+  }>;
+  additional_resources?: Array<{
+    type?: string;
+    title: string;
+    description: string;
+  }>;
+}
+
+export interface WeekPlan {
+  week_number?: number;
+  focus: string;
+  topics: string[];
+  goals: string[];
+  learning_materials?: LearningMaterial;
+}
+
 export interface LearningPath {
   id: string;
   user: string;
-  subject: 'math' | 'english';
+  subject: 'math';
+  syllabus?: Syllabus;
   week_plan: Record<string, WeekPlan>; // { "week_1": {...}, "week_2": {...} }
   daily_tasks: Record<string, DailyTask>; // { "day_1": {...}, "day_2": {...} }
   status: 'active' | 'completed' | 'paused';
@@ -86,7 +151,7 @@ export interface ChatMessage {
 export interface ChatSession {
   id: string;
   user: string;
-  subject: 'math' | 'english';
+  subject: 'math';
   messages: ChatMessage[];
   context: Record<string, any>;
   created_at: string;
@@ -97,7 +162,7 @@ export interface ChatSession {
 export interface Progress {
   id: string;
   user: string;
-  subject: 'math' | 'english';
+  subject: 'math';
   metric_name: string;
   metric_value: number;
   recorded_at: string;
@@ -129,20 +194,20 @@ export interface SubmitDiagnosticRequest {
 // Analyze weaknesses request
 export interface AnalyzeWeaknessesRequest {
   sevis_pass_id: string;
-  subject: 'math' | 'english';
+  subject: 'math';
 }
 
 // Generate study plan request
 export interface GenerateStudyPlanRequest {
   sevis_pass_id: string;
-  subject: 'math' | 'english';
+  subject: 'math';
 }
 
 // Tutor chat request
 export interface TutorChatRequest {
   sevis_pass_id: string;
   message: string;
-  subject: 'math' | 'english';
+  subject: 'math';
 }
 
 export interface TutorChatResponse {

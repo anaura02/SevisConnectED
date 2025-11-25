@@ -1,5 +1,5 @@
 """
-Utility functions for SevisConnectED
+Utility functions for AI Teacher
 """
 from typing import Dict, Any
 from rest_framework.response import Response

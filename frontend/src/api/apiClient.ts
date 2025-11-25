@@ -1,5 +1,5 @@
 /**
- * Axios API Client for SevisConnectED
+ * Axios API Client for AI Teacher
  * Single axios instance for all API calls (per PRD requirements)
  */
 import axios, { AxiosInstance, AxiosError } from 'axios';
@@ -14,7 +14,7 @@ const apiClient: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 seconds
+  timeout: 120000, // 120 seconds (2 minutes) - AI generation can take time
 });
 
 // Request interceptor (for adding auth tokens if needed in future)

@@ -1,5 +1,5 @@
 """
-Serializers for SevisConnectED API
+Serializers for AI Teacher API
 Converts Django models to/from JSON for API responses
 """
 from rest_framework import serializers
@@ -47,7 +47,7 @@ class LearningPathSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LearningPath
-        fields = ['id', 'user', 'user_id', 'subject', 'week_plan', 'daily_tasks', 
+        fields = ['id', 'user', 'user_id', 'subject', 'syllabus', 'week_plan', 'daily_tasks', 
                   'status', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 

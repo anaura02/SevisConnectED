@@ -1,5 +1,5 @@
 """
-Core models for SevisConnectED
+Core models for AI Teacher
 Based on PRD schema with enhancements for MVP functionality
 """
 import uuid
@@ -96,12 +96,16 @@ class LearningPath(models.Model):
     """
     AI-generated personalized learning path
     PRD: LearningPath (id, user_id, week_plan JSON)
-    Enhanced: Added subject, daily_tasks, and status for better tracking
+    Enhanced: Added subject, daily_tasks, syllabus, and learning materials
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='learning_paths')
     subject = models.CharField(max_length=50, choices=[('math', 'Mathematics'), ('english', 'English')])
-    week_plan = models.JSONField(default=dict, help_text="Week-by-week learning plan structure")
+    syllabus = models.JSONField(
+        default=dict,
+        help_text="Comprehensive syllabus/curriculum outline for the subject"
+    )
+    week_plan = models.JSONField(default=dict, help_text="Week-by-week learning plan structure with learning materials")
     daily_tasks = models.JSONField(
         default=dict,
         help_text="Daily micro-lessons and practice tasks"

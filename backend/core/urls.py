@@ -15,7 +15,10 @@ urlpatterns = [
     # Diagnostic endpoints (PRD Section 4.2)
     path('diagnostic/submit/', views.SubmitDiagnosticView.as_view(), name='submit_diagnostic'),
     
-    # Weakness analysis endpoint (PRD Section 4.3)
+    # Performance analysis endpoint (Primary method - analyzes topic-level performance)
+    path('analyze/performance/', views.AnalyzePerformanceView.as_view(), name='analyze_performance'),
+    
+    # Weakness analysis endpoint (PRD Section 4.3) - Secondary method using diagnostic
     path('analyze/weaknesses/', views.AnalyzeWeaknessesView.as_view(), name='analyze_weaknesses'),
     
     # Learning path generation (PRD Section 4.4)

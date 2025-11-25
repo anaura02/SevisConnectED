@@ -3,7 +3,6 @@
  * Displays user overview, quick actions, and recent activity
  */
 import { useState, useEffect } from 'react';
-import { Navigation } from '../components/Navigation';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { progressApi } from '../api/services';
@@ -36,7 +35,16 @@ export const DashboardPage: React.FC = () => {
 
   // Calculate stats from progress data
   const mathProgress = progress.filter(p => p.subject === 'math');
-  const englishProgress = progress.filter(p => p.subject === 'english');
+  
+  // Calculate topic-specific stats
+  const topicStats = {
+    algebra: mathProgress.filter(p => p.metric_name.includes('algebra')).length,
+    geometry: mathProgress.filter(p => p.metric_name.includes('geometry')).length,
+    trigonometry: mathProgress.filter(p => p.metric_name.includes('trigonometry')).length,
+    calculus: mathProgress.filter(p => p.metric_name.includes('calculus')).length,
+  };
+  
+  const totalTopicRecords = Object.values(topicStats).reduce((sum, count) => sum + count, 0);
   
   const overallScore = progress.length > 0
     ? progress.reduce((sum, p) => sum + (p.metric_value || 0), 0) / progress.length
@@ -44,8 +52,6 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -86,18 +92,36 @@ export const DashboardPage: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-600">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">English</p>
+                <p className="text-sm text-gray-600 mb-1">Math Topics</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {englishProgress.length > 0 ? `${englishProgress.length} records` : 'No data'}
+                  {totalTopicRecords > 0 ? `${totalTopicRecords} topics` : 'No data'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Algebra • Geometry • Trig • Calculus
                 </p>
               </div>
-              <div className="text-4xl">📚</div>
+              <div className="text-4xl">📐</div>
             </div>
           </div>
         </div>
 
         {/* Quick Actions */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <Link
+            to="/diagnostic"
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all border-l-4 border-purple-600 hover:border-purple-700 group"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xl font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+                Diagnostic Test
+              </h3>
+              <span className="text-2xl">📝</span>
+            </div>
+            <p className="text-gray-600 text-sm">
+              Take an assessment to identify your strengths and weaknesses
+            </p>
+          </Link>
+
           <Link
             to="/study-plan"
             className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all border-l-4 border-primary-600 hover:border-primary-700 group"

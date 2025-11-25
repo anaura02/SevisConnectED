@@ -1,12 +1,15 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { Navigation } from './components/Navigation';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { DiagnosticTestPage } from './pages/DiagnosticTestPage';
+import { StudyPlanPage } from './pages/StudyPlanPage';
 
 function App() {
-  const { loading } = useAuth();
+  const { loading, user } = useAuth();
 
   if (loading) {
     return (
@@ -21,6 +24,7 @@ function App() {
 
   return (
     <Router>
+      {user && <Navigation />}
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
@@ -35,21 +39,25 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/diagnostic"
+          element={
+            <ProtectedRoute>
+              <DiagnosticTestPage />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Placeholder routes for future pages */}
         <Route
           path="/study-plan"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Study Plan Page</h1>
-                  <p className="text-gray-600">Coming soon...</p>
-                </div>
-              </div>
+              <StudyPlanPage />
             </ProtectedRoute>
           }
         />
+
+        {/* Placeholder routes for future pages */}
         <Route
           path="/tutor"
           element={

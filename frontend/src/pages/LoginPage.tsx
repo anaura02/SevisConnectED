@@ -8,9 +8,6 @@ import { useAuth } from '../context/AuthContext';
 export const LoginPage: React.FC = () => {
   const [sevisPassId, setSevisPassId] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [gradeLevel, setGradeLevel] = useState<11 | 12>(11);
-  const [school, setSchool] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { user, login, loading: authLoading } = useAuth();
@@ -48,10 +45,7 @@ export const LoginPage: React.FC = () => {
     try {
       await login(
         sevisPassId.trim(),
-        password.trim(),
-        name.trim() || undefined,
-        gradeLevel,
-        school.trim() || undefined
+        password.trim()
       );
       // Navigate to the page user was trying to access, or dashboard
       navigate(from, { replace: true });
@@ -87,7 +81,7 @@ export const LoginPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary-700 mb-2">SevisConnectED</h1>
+          <h1 className="text-3xl font-bold text-primary-700 mb-2">AI Teacher</h1>
           <p className="text-gray-600">Sign in to continue</p>
         </div>
 
@@ -118,49 +112,6 @@ export const LoginPage: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-              Name (Optional)
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="gradeLevel" className="block text-sm font-medium text-gray-700 mb-2">
-              Grade Level
-            </label>
-            <select
-              id="gradeLevel"
-              value={gradeLevel}
-              onChange={(e) => setGradeLevel(Number(e.target.value) as 11 | 12)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value={11}>Grade 11</option>
-              <option value={12}>Grade 12</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="school" className="block text-sm font-medium text-gray-700 mb-2">
-              School (Optional)
-            </label>
-            <input
-              id="school"
-              type="text"
-              value={school}
-              onChange={(e) => setSchool(e.target.value)}
-              placeholder="Your school name"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>

@@ -1,6 +1,7 @@
 """
-API Views for SevisConnectED
+API Views for AI Teacher
 Implements all endpoints according to PRD requirements
+Enhanced: Performance-based analysis for Mathematics topics
 """
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
@@ -114,6 +115,7 @@ class SubmitDiagnosticView(APIView):
     POST /api/diagnostic/submit/
     Submit diagnostic test answers
     PRD: Diagnostic Test (Initial Assessment)
+    Note: Optional - performance analysis can work without diagnostic
     """
     def post(self, request):
         sevis_pass_id = request.data.get('sevis_pass_id')
@@ -135,7 +137,7 @@ class SubmitDiagnosticView(APIView):
         for answer in answers:
             diagnostic = Diagnostic.objects.create(
                 user=user,
-                subject=answer.get('subject', 'math'),
+                subject='math',  # Only math now
                 question=answer.get('question', ''),
                 student_answer=answer.get('student_answer', ''),
                 correct_answer=answer.get('correct_answer', ''),
@@ -156,11 +158,137 @@ class SubmitDiagnosticView(APIView):
         )
 
 
+class AnalyzePerformanceView(APIView):
+    """
+    POST /api/analyze/performance/
+    Analyze academic performance from Progress records (topic-level analysis)
+    Primary method: Analyzes Mathematics topics directly from database
+    """
+    def post(self, request):
+        sevis_pass_id = request.data.get('sevis_pass_id')
+        
+        if not sevis_pass_id:
+            return error_response('SevisPass ID is required')
+        
+        try:
+            user = User.objects.get(sevis_pass_id=sevis_pass_id)
+        except User.DoesNotExist:
+            return error_response('User not found', http_status=404)
+        
+        # Get all math progress records
+        progress_records = Progress.objects.filter(user=user, subject='math')
+        
+        if not progress_records.exists():
+            return error_response('No academic performance data found. Please ensure student records are in the database.', http_status=404)
+        
+        # Define the 4 core math topics
+        math_topics = ['algebra', 'geometry', 'trigonometry', 'calculus']
+        
+        # Group progress records by topic and calculate averages
+        topic_scores = {}
+        topic_data = {}
+        
+        for topic in math_topics:
+            topic_key = f'{topic}_score'
+            topic_records = progress_records.filter(metric_name=topic_key)
+            
+            if topic_records.exists():
+                scores = [r.metric_value for r in topic_records]
+                avg_score = sum(scores) / len(scores)
+                topic_scores[topic] = round(avg_score, 1)
+                topic_data[topic] = {
+                    'average': round(avg_score, 1),
+                    'records_count': len(scores),
+                    'min': round(min(scores), 1),
+                    'max': round(max(scores), 1),
+                }
+            else:
+                # If no data for this topic, set a default or skip
+                topic_scores[topic] = None
+        
+        # Calculate overall math performance
+        overall_scores = [score for score in topic_scores.values() if score is not None]
+        overall_performance = sum(overall_scores) / len(overall_scores) if overall_scores else 0.0
+        
+        # Identify weak topics (< 60% threshold)
+        weak_topics = {topic: score for topic, score in topic_scores.items() 
+                      if score is not None and score < 60}
+        strong_topics = {topic: score for topic, score in topic_scores.items() 
+                        if score is not None and score >= 60}
+        
+        # Determine if student is poor-performing
+        is_poor_performing = overall_performance < 60 or len(weak_topics) >= 2
+        
+        # Prepare performance context for AI
+        performance_context = {
+            'grade_level': user.grade_level,
+            'overall_performance': round(overall_performance, 1),
+            'topic_scores': topic_scores,
+            'weak_topics': weak_topics,
+            'strong_topics': strong_topics,
+            'is_poor_performing': is_poor_performing,
+            'performance_records_count': progress_records.count(),
+        }
+        
+        # Call AI service to analyze performance and generate weakness profile
+        # Convert topic scores to weakness/strength format for AI
+        weaknesses_dict = {}
+        strengths_dict = {}
+        
+        for topic, score in topic_scores.items():
+            if score is not None:
+                # Convert percentage to 0-1 scale (lower score = worse performance)
+                normalized_score = score / 100.0
+                if score < 60:
+                    weaknesses_dict[topic] = normalized_score
+                else:
+                    strengths_dict[topic] = normalized_score
+        
+        # Generate baseline score (overall performance)
+        baseline_score = overall_performance
+        
+        # Determine recommended difficulty
+        if overall_performance < 50:
+            recommended_difficulty = 'beginner'
+        elif overall_performance < 70:
+            recommended_difficulty = 'intermediate'
+        else:
+            recommended_difficulty = 'advanced'
+        
+        # Create or update weakness profile
+        weakness_profile, created = WeaknessProfile.objects.update_or_create(
+            user=user,
+            subject='math',
+            defaults={
+                'weaknesses': weaknesses_dict,
+                'strengths': strengths_dict,
+                'baseline_score': baseline_score,
+                'confidence_score': 0.9,  # High confidence when using actual performance data
+                'recommended_difficulty': recommended_difficulty,
+            }
+        )
+        
+        return success_response(
+            data={
+                'weakness_profile': WeaknessProfileSerializer(weakness_profile).data,
+                'performance_analysis': {
+                    'overall_score': round(overall_performance, 1),
+                    'topic_scores': topic_data,
+                    'weak_topics': list(weak_topics.keys()),
+                    'strong_topics': list(strong_topics.keys()),
+                    'is_poor_performing': is_poor_performing,
+                }
+            },
+            message='Performance analysis completed successfully'
+        )
+
+
 class AnalyzeWeaknessesView(APIView):
     """
     POST /api/analyze/weaknesses/
     Analyze diagnostic results and generate weakness profile
     PRD: Real-time Weakness Detection
+    Note: This is now secondary - AnalyzePerformanceView is primary
     """
     def post(self, request):
         sevis_pass_id = request.data.get('sevis_pass_id')
@@ -179,6 +307,55 @@ class AnalyzeWeaknessesView(APIView):
         if not diagnostics.exists():
             return error_response('No diagnostic results found. Please complete diagnostic test first.', http_status=404)
         
+        # Calculate academic performance from Progress records
+        progress_records = Progress.objects.filter(user=user, subject=subject).order_by('-recorded_at')
+        
+        # Calculate average scores from progress data
+        performance_data = {
+            'quiz_scores': [],
+            'practice_completion': [],
+            'topic_mastery': [],
+            'overall_scores': [],
+        }
+        
+        for record in progress_records:
+            metric_name = record.metric_name.lower()
+            metric_value = record.metric_value
+            
+            if 'quiz' in metric_name or 'score' in metric_name:
+                performance_data['quiz_scores'].append(metric_value)
+            elif 'practice' in metric_name or 'completion' in metric_name:
+                performance_data['practice_completion'].append(metric_value)
+            elif 'mastery' in metric_name or 'topic' in metric_name:
+                performance_data['topic_mastery'].append(metric_value)
+            
+            # Collect all scores for overall average
+            if metric_value > 0:
+                performance_data['overall_scores'].append(metric_value)
+        
+        # Calculate averages
+        avg_quiz_score = sum(performance_data['quiz_scores']) / len(performance_data['quiz_scores']) if performance_data['quiz_scores'] else None
+        avg_practice = sum(performance_data['practice_completion']) / len(performance_data['practice_completion']) if performance_data['practice_completion'] else None
+        avg_mastery = sum(performance_data['topic_mastery']) / len(performance_data['topic_mastery']) if performance_data['topic_mastery'] else None
+        overall_performance = sum(performance_data['overall_scores']) / len(performance_data['overall_scores']) if performance_data['overall_scores'] else None
+        
+        # Calculate diagnostic average (from is_correct, not score field)
+        # The diagnostic test score is based on correct/incorrect answers
+        correct_diagnostics = diagnostics.filter(is_correct=True).count()
+        total_diagnostics = diagnostics.count()
+        diagnostic_percentage = (correct_diagnostics / total_diagnostics * 100) if total_diagnostics > 0 else 0.0
+        
+        # Also calculate from score field if available (for reference)
+        diagnostic_scores = [d.score for d in diagnostics if d.score > 0]
+        avg_diagnostic = sum(diagnostic_scores) / len(diagnostic_scores) * 100 if diagnostic_scores else diagnostic_percentage
+        
+        # Determine if student is poor-performing (threshold: < 60%)
+        is_poor_performing = False
+        if overall_performance is not None and overall_performance < 60:
+            is_poor_performing = True
+        elif avg_diagnostic is not None and avg_diagnostic < 60:
+            is_poor_performing = True
+        
         # Prepare diagnostic data for AI analysis
         diagnostic_data = [
             {
@@ -191,8 +368,20 @@ class AnalyzeWeaknessesView(APIView):
             for d in diagnostics
         ]
         
-        # Call AI service to analyze weaknesses
-        analysis_result = analyze_weaknesses(diagnostic_data)
+        # Prepare performance context for AI
+        performance_context = {
+            'grade_level': user.grade_level,
+            'overall_performance': round(overall_performance, 1) if overall_performance else None,
+            'avg_quiz_score': round(avg_quiz_score, 1) if avg_quiz_score else None,
+            'avg_practice_completion': round(avg_practice, 1) if avg_practice else None,
+            'avg_topic_mastery': round(avg_mastery, 1) if avg_mastery else None,
+            'avg_diagnostic_score': round(diagnostic_percentage, 1),  # Use the actual diagnostic test percentage
+            'is_poor_performing': is_poor_performing,
+            'performance_records_count': progress_records.count(),
+        }
+        
+        # Call AI service to analyze weaknesses (now with performance data)
+        analysis_result = analyze_weaknesses(diagnostic_data, performance_context)
         
         # Create or update weakness profile with AI results
         weakness_profile, created = WeaknessProfile.objects.update_or_create(
@@ -218,6 +407,7 @@ class GenerateStudyPlanView(APIView):
     POST /api/generate/study-plan/
     Generate personalized learning path based on weakness profile
     PRD: Personalized Learning Path
+    Enhanced: Works with performance-based weakness profiles
     """
     def post(self, request):
         sevis_pass_id = request.data.get('sevis_pass_id')
@@ -236,9 +426,21 @@ class GenerateStudyPlanView(APIView):
             weakness_profile = WeaknessProfile.objects.get(user=user, subject=subject)
         except WeaknessProfile.DoesNotExist:
             return error_response(
-                'Weakness profile not found. Please complete diagnostic and weakness analysis first.',
+                'Weakness profile not found. Please analyze performance first.',
                 http_status=404
             )
+        
+        # Get topic-level scores from Progress records for better AI context
+        progress_records = Progress.objects.filter(user=user, subject=subject)
+        topic_scores = {}
+        math_topics = ['algebra', 'geometry', 'trigonometry', 'calculus']
+        
+        for topic in math_topics:
+            topic_key = f'{topic}_score'
+            topic_records = progress_records.filter(metric_name=topic_key)
+            if topic_records.exists():
+                scores = [r.metric_value for r in topic_records]
+                topic_scores[topic] = round(sum(scores) / len(scores), 1)
         
         # Call AI service to generate learning path
         path_data = generate_study_plan(
@@ -248,7 +450,8 @@ class GenerateStudyPlanView(APIView):
                 'recommended_difficulty': weakness_profile.recommended_difficulty,
             },
             subject=subject,
-            grade_level=user.grade_level
+            grade_level=user.grade_level,
+            topic_scores=topic_scores if topic_scores else None
         )
         
         # Create or update learning path with AI-generated data
@@ -256,6 +459,7 @@ class GenerateStudyPlanView(APIView):
             user=user,
             subject=subject,
             defaults={
+                'syllabus': path_data.get('syllabus', {}),
                 'week_plan': path_data.get('week_plan', {}),
                 'daily_tasks': path_data.get('daily_tasks', {}),
                 'status': 'active',
@@ -273,12 +477,12 @@ class TutorChatView(APIView):
     POST /api/tutor/chat/
     AI tutor chat interface
     PRD: AI Teacher Interface
-    Note: This will call AI service (to be implemented)
     """
     def post(self, request):
         sevis_pass_id = request.data.get('sevis_pass_id')
-        message = request.data.get('message')
+        message = request.data.get('message', '')
         subject = request.data.get('subject', 'math')
+        chat_history = request.data.get('chat_history', [])
         
         if not sevis_pass_id:
             return error_response('SevisPass ID is required')
@@ -295,44 +499,50 @@ class TutorChatView(APIView):
         chat_session, created = ChatSession.objects.get_or_create(
             user=user,
             subject=subject,
-            defaults={'messages': [], 'context': {}}
+            defaults={
+                'messages': [],
+                'context': {
+                    'grade_level': user.grade_level,
+                    'subject': subject,
+                }
+            }
         )
         
-        # Add user message to history
-        chat_session.messages.append({
-            'role': 'user',
-            'content': message
-        })
+        # Get weakness profile for context
+        try:
+            weakness_profile = WeaknessProfile.objects.get(user=user, subject=subject)
+            context = {
+                'grade_level': user.grade_level,
+                'subject': subject,
+                'weaknesses': weakness_profile.weaknesses,
+                'baseline_score': weakness_profile.baseline_score,
+            }
+        except WeaknessProfile.DoesNotExist:
+            context = {
+                'grade_level': user.grade_level,
+                'subject': subject,
+            }
         
-        # Prepare context
-        weakness_profile = WeaknessProfile.objects.filter(user=user, subject=subject).first()
-        context = {
-            'subject': subject,
-            'grade_level': user.grade_level,
-            'weaknesses': weakness_profile.weaknesses if weakness_profile else {},
-        }
+        # Prepare chat history
+        messages = chat_session.messages if chat_session.messages else []
+        if chat_history:
+            messages = chat_history
+        
+        # Call AI service
+        ai_response = tutor_chat(message, messages, context)
+        
+        # Update chat session
+        messages.append({'role': 'user', 'content': message})
+        messages.append({'role': 'assistant', 'content': ai_response})
+        chat_session.messages = messages
         chat_session.context = context
-        
-        # Call AI service to generate response
-        ai_response = tutor_chat(
-            user_message=message,
-            chat_history=chat_session.messages[:-1],  # Exclude current message
-            context=context
-        )
-        
-        # Add AI response to history
-        chat_session.messages.append({
-            'role': 'assistant',
-            'content': ai_response
-        })
-        
         chat_session.save()
         
         return success_response(
             data={
-                'response': ai_response,
                 'session_id': str(chat_session.id),
-                'messages': chat_session.messages
+                'response': ai_response,
+                'chat_history': messages,
             },
             message='Chat response generated'
         )
@@ -341,12 +551,12 @@ class TutorChatView(APIView):
 class ProgressView(APIView):
     """
     GET /api/progress/
-    Get student progress tracking data
-    PRD: Progress tracking endpoint
+    Get student progress records
+    PRD: Progress Tracking
     """
     def get(self, request):
-        sevis_pass_id = request.query_params.get('sevis_pass_id')
-        subject = request.query_params.get('subject')
+        sevis_pass_id = request.GET.get('sevis_pass_id')
+        subject = request.GET.get('subject', 'math')
         
         if not sevis_pass_id:
             return error_response('SevisPass ID is required')
@@ -356,12 +566,7 @@ class ProgressView(APIView):
         except User.DoesNotExist:
             return error_response('User not found', http_status=404)
         
-        # Get progress records
-        progress_query = Progress.objects.filter(user=user)
-        if subject:
-            progress_query = progress_query.filter(subject=subject)
-        
-        progress_records = progress_query.order_by('-recorded_at')[:50]  # Limit to 50 most recent
+        progress_records = Progress.objects.filter(user=user, subject=subject).order_by('-recorded_at')
         
         return success_response(
             data=ProgressSerializer(progress_records, many=True).data,
@@ -372,17 +577,16 @@ class ProgressView(APIView):
 class TeacherStudentsView(APIView):
     """
     GET /api/teacher/students/
-    Get list of students for teacher dashboard
-    PRD: Teacher Dashboard (Lite for MVP)
+    Get list of all students (for teacher dashboard)
+    PRD: Teacher Dashboard
     """
     def get(self, request):
-        school = request.query_params.get('school')
+        school = request.GET.get('school')
         
-        students_query = User.objects.all()
         if school:
-            students_query = students_query.filter(school=school)
-        
-        students = students_query.order_by('-created_at')
+            students = User.objects.filter(school=school)
+        else:
+            students = User.objects.all()
         
         return success_response(
             data=UserSerializer(students, many=True).data,
@@ -418,4 +622,3 @@ class TeacherStudentDetailView(APIView):
             },
             message='Student details retrieved successfully'
         )
-

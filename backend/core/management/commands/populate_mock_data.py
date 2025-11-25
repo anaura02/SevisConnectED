@@ -247,46 +247,60 @@ class Command(BaseCommand):
         return paths_created
 
     def _create_progress_records(self, student):
-        """Create progress tracking records"""
-        subjects = ['math', 'english']
+        """Create progress tracking records with topic-level scores for Mathematics"""
+        # 4 core math topics for PNG Grade 11-12
+        math_topics = [
+            'algebra_score',
+            'geometry_score',
+            'trigonometry_score',
+            'calculus_score',
+        ]
+        
         progress_created = 0
         
-        # Create progress records for the last 30 days
-        for day_offset in range(30):
-            date = timezone.now() - timedelta(days=day_offset)
+        # Create topic-level scores for each student
+        # Each topic gets a score between 40-80% (some variation for realism)
+        for topic in math_topics:
+            # Generate a base score for this student for this topic
+            # Some students will be weaker in certain topics
+            base_score = round(random.uniform(45, 75), 1)
             
-            # Create 0-2 progress records per day (not every day has activity)
-            if random.random() > 0.4:  # 60% chance of activity on a given day
-                for subject in subjects:
-                    if random.random() > 0.5:  # 50% chance per subject
-                        metric_names = [
-                            'quiz_score',
-                            'practice_completion',
-                            'topic_mastery',
-                            'time_spent_minutes',
-                            'exercises_completed',
-                        ]
-                        
-                        metric_name = random.choice(metric_names)
-                        
-                        # Generate realistic metric values
-                        if 'score' in metric_name or 'mastery' in metric_name:
-                            metric_value = round(random.uniform(60, 95), 1)
-                        elif 'completion' in metric_name:
-                            metric_value = round(random.uniform(70, 100), 1)
-                        elif 'time' in metric_name:
-                            metric_value = round(random.uniform(15, 120), 0)
-                        else:
-                            metric_value = round(random.uniform(5, 20), 0)
-                        
-                        Progress.objects.create(
-                            user=student,
-                            subject=subject,
-                            metric_name=metric_name,
-                            metric_value=metric_value,
-                            recorded_at=date
-                        )
-                        progress_created += 1
+            # Create 2-4 records per topic (showing progression over time)
+            num_records = random.randint(2, 4)
+            for i in range(num_records):
+                # Slight variation in scores (showing improvement or fluctuation)
+                score_variation = random.uniform(-5, 5)
+                topic_score = max(40, min(80, base_score + score_variation))
+                
+                # Spread records over the last 30 days
+                days_ago = random.randint(0, 30)
+                date = timezone.now() - timedelta(days=days_ago)
+                
+                Progress.objects.create(
+                    user=student,
+                    subject='math',
+                    metric_name=topic,
+                    metric_value=round(topic_score, 1),
+                    recorded_at=date
+                )
+                progress_created += 1
+        
+        # Also create overall math score
+        overall_scores = [p.metric_value for p in Progress.objects.filter(
+            user=student, 
+            subject='math',
+            metric_name__in=math_topics
+        )]
+        if overall_scores:
+            overall_math_score = sum(overall_scores) / len(overall_scores)
+            Progress.objects.create(
+                user=student,
+                subject='math',
+                metric_name='overall_math_score',
+                metric_value=round(overall_math_score, 1),
+                recorded_at=timezone.now() - timedelta(days=random.randint(0, 30))
+            )
+            progress_created += 1
         
         return progress_created
 

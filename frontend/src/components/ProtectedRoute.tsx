@@ -26,9 +26,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!user) {
     // Save the attempted location to redirect back after login
+    console.log('ProtectedRoute: No user, redirecting to login. Location:', location.pathname);
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  console.log('ProtectedRoute: User authenticated, rendering children');
   return <>{children}</>;
 };
 

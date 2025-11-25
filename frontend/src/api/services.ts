@@ -1,5 +1,5 @@
 /**
- * API Service Functions for SevisConnectED
+ * API Service Functions for AI Teacher
  * All API calls to backend endpoints
  */
 import apiClient from './apiClient';
@@ -64,11 +64,55 @@ export const diagnosticApi = {
   },
 };
 
+// ==================== Performance Analysis ====================
+
+export const performanceApi = {
+  /**
+   * Analyze academic performance from Progress records (topic-level)
+   * POST /api/analyze/performance/
+   * Primary method: Analyzes Mathematics topics directly from database
+   */
+  analyze: async (sevisPassId: string): Promise<ApiResponse<{
+    weakness_profile: WeaknessProfile;
+    performance_analysis: {
+      overall_score: number;
+      topic_scores: Record<string, {
+        average: number;
+        records_count: number;
+        min: number;
+        max: number;
+      }>;
+      weak_topics: string[];
+      strong_topics: string[];
+      is_poor_performing: boolean;
+    };
+  }>> => {
+    const response = await apiClient.post<ApiResponse<{
+      weakness_profile: WeaknessProfile;
+      performance_analysis: {
+        overall_score: number;
+        topic_scores: Record<string, {
+          average: number;
+          records_count: number;
+          min: number;
+          max: number;
+        }>;
+        weak_topics: string[];
+        strong_topics: string[];
+        is_poor_performing: boolean;
+      };
+    }>>('/analyze/performance/', {
+      sevis_pass_id: sevisPassId,
+    });
+    return response.data;
+  },
+};
+
 // ==================== Weakness Analysis ====================
 
 export const weaknessApi = {
   /**
-   * Analyze weaknesses from diagnostic results
+   * Analyze weaknesses from diagnostic results (secondary method)
    * POST /api/analyze/weaknesses/
    */
   analyze: async (data: AnalyzeWeaknessesRequest): Promise<ApiResponse<WeaknessProfile>> => {
@@ -110,7 +154,7 @@ export const progressApi = {
    * Get student progress
    * GET /api/progress/
    */
-  get: async (sevisPassId: string, subject?: 'math' | 'english'): Promise<ApiResponse<Progress[]>> => {
+  get: async (sevisPassId: string, subject: 'math' = 'math'): Promise<ApiResponse<Progress[]>> => {
     const params: Record<string, string> = { sevis_pass_id: sevisPassId };
     if (subject) {
       params.subject = subject;

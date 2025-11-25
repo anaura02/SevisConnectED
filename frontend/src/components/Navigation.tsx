@@ -24,7 +24,7 @@ export const Navigation: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo/Brand */}
           <Link to="/dashboard" className="flex items-center space-x-2">
-            <span className="text-xl font-bold text-primary-700">SevisConnectED</span>
+            <span className="text-xl font-bold text-primary-700">AI Teacher</span>
           </Link>
 
           {/* Navigation Links */}
@@ -34,6 +34,12 @@ export const Navigation: React.FC = () => {
               className="text-gray-700 hover:text-primary-600 transition-colors"
             >
               Dashboard
+            </Link>
+            <Link
+              to="/diagnostic"
+              className="text-gray-700 hover:text-primary-600 transition-colors"
+            >
+              Diagnostic Test
             </Link>
             <Link
               to="/study-plan"

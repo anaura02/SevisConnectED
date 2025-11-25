@@ -1,5 +1,5 @@
 /**
- * Authentication Context for SevisConnectED
+ * Authentication Context for AI Teacher
  * Manages user authentication state across the application
  */
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -25,8 +25,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const loadUser = async () => {
       try {
         const storedUser = localStorage.getItem('user');
+        console.log('AuthContext: Loading user from storage:', storedUser ? 'Found' : 'Not found');
         if (storedUser) {
           const userData = JSON.parse(storedUser);
+          console.log('AuthContext: User data loaded:', userData.sevis_pass_id);
           setUser(userData);
           
           // Optionally refresh user data from server
@@ -34,6 +36,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             try {
               const response = await authApi.getProfile(userData.sevis_pass_id);
               if (response.status === 'success' && response.data) {
+                console.log('AuthContext: User data refreshed from server');
                 setUser(response.data);
                 localStorage.setItem('user', JSON.stringify(response.data));
               }
@@ -42,12 +45,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               // Keep stored user data if refresh fails
             }
           }
+        } else {
+          console.log('AuthContext: No user in storage');
         }
       } catch (error) {
         console.error('Failed to load user from storage:', error);
         localStorage.removeItem('user');
       } finally {
         setLoading(false);
+        console.log('AuthContext: Loading complete');
       }
     };
 

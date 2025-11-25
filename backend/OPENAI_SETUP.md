@@ -16,7 +16,7 @@
 
 4. **Create a new API key:**
    - Click "Create new secret key"
-   - Give it a name (e.g., "SevisConnectED MVP")
+   - Give it a name (e.g., "AI Teacher MVP")
    - Click "Create secret key"
    - **IMPORTANT:** Copy the key immediately - you won't be able to see it again!
    - It will look like: `sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`

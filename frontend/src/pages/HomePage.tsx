@@ -1,20 +1,23 @@
 /**
- * Home Page - Landing page for SevisConnectED
+ * Home Page - Landing page for AI Teacher
  * Modern, tech-focused design
  */
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export const HomePage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   // If user is logged in, show a different CTA
   const handleGetStarted = () => {
+    console.log('HomePage: Button clicked, user:', user);
     if (user) {
-      navigate('/dashboard');
+      console.log('HomePage: Navigating to /dashboard');
+      navigate('/dashboard', { replace: true });
     } else {
-      navigate('/login');
+      console.log('HomePage: Navigating to /login');
+      navigate('/login', { replace: true });
     }
   };
   return (
@@ -23,8 +26,7 @@ export const HomePage: React.FC = () => {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            SevisConnect
-            <span className="text-primary-600">ED</span>
+                AI Teacher
           </h1>
           <p className="text-xl text-gray-600 mb-8">
             AI-Powered Learning Assistant for PNG Grade 11-12 Students
@@ -34,19 +36,28 @@ export const HomePage: React.FC = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={handleGetStarted}
-              className="bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg"
-            >
-              {user ? 'Go to Dashboard' : 'Get Started'}
-            </button>
-            {!user && (
+            {user ? (
               <Link
-                to="/login"
-                className="bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors border-2 border-primary-600 text-center"
+                to="/dashboard"
+                className="bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg text-center"
               >
-                Student Login
+                Go to Dashboard
               </Link>
+            ) : (
+              <>
+                <button
+                  onClick={handleGetStarted}
+                  className="bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg"
+                >
+                  Get Started
+                </button>
+                <Link
+                  to="/login"
+                  className="bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors border-2 border-primary-600 text-center"
+                >
+                  Student Login
+                </Link>
+              </>
             )}
           </div>
         </div>

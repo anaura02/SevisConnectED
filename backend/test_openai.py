@@ -51,7 +51,7 @@ try:
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": "Say 'Hello, SevisConnectED!' if you can read this."}
+                    {"role": "user", "content": "Say 'Hello, AI Teacher!' if you can read this."}
                 ],
                 max_tokens=20
             )
