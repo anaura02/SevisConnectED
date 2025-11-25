@@ -36,7 +36,7 @@ export const DashboardPage: React.FC = () => {
   // Calculate stats from progress data
   const mathProgress = progress.filter(p => p.subject === 'math');
   
-  // Calculate topic-specific stats
+  // Calculate topic-specific stats (count records per topic)
   const topicStats = {
     algebra: mathProgress.filter(p => p.metric_name.includes('algebra')).length,
     geometry: mathProgress.filter(p => p.metric_name.includes('geometry')).length,
@@ -46,8 +46,27 @@ export const DashboardPage: React.FC = () => {
   
   const totalTopicRecords = Object.values(topicStats).reduce((sum, count) => sum + count, 0);
   
-  const overallScore = progress.length > 0
-    ? progress.reduce((sum, p) => sum + (p.metric_value || 0), 0) / progress.length
+  // Calculate overall progress - only use score-related metrics (not time/completion metrics)
+  // This gives a more accurate representation of academic performance
+  const scoreMetrics = progress.filter(p => 
+    p.metric_name.includes('_score') || 
+    p.metric_name.includes('score') ||
+    p.metric_name === 'overall_math_score'
+  );
+  
+  const overallScore = scoreMetrics.length > 0
+    ? scoreMetrics.reduce((sum, p) => sum + (p.metric_value || 0), 0) / scoreMetrics.length
+    : 0;
+  
+  // Calculate average math score (only score metrics for math)
+  const mathScoreMetrics = mathProgress.filter(p => 
+    p.metric_name.includes('_score') || 
+    p.metric_name.includes('score') ||
+    p.metric_name === 'overall_math_score'
+  );
+  
+  const averageMathScore = mathScoreMetrics.length > 0
+    ? mathScoreMetrics.reduce((sum, p) => sum + (p.metric_value || 0), 0) / mathScoreMetrics.length
     : 0;
 
   return (
@@ -68,9 +87,12 @@ export const DashboardPage: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-primary-600">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Overall Progress</p>
+                <p className="text-sm text-gray-600 mb-1">Average Score</p>
                 <p className="text-3xl font-bold text-gray-900">
                   {overallScore > 0 ? `${Math.round(overallScore)}%` : '--'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Average of all test scores
                 </p>
               </div>
               <div className="text-4xl">📊</div>
@@ -80,9 +102,12 @@ export const DashboardPage: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-600">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Mathematics</p>
+                <p className="text-sm text-gray-600 mb-1">Math Average</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {mathProgress.length > 0 ? `${mathProgress.length} records` : 'No data'}
+                  {averageMathScore > 0 ? `${Math.round(averageMathScore)}%` : '--'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Average math test scores
                 </p>
               </div>
               <div className="text-4xl">🔢</div>

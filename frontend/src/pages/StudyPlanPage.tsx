@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useStudyPlan } from '../context/StudyPlanContext';
+import { VideoPlayer } from '../components/VideoPlayer';
 import type { WeaknessProfile, LearningPath, Syllabus, LearningMaterial } from '../types';
 
 export const StudyPlanPage: React.FC = () => {
@@ -545,31 +546,88 @@ export const StudyPlanPage: React.FC = () => {
                                               <span className="mr-2">🎥</span>
                                               Video Resources
                                             </h4>
-                                            <div className="space-y-3">
+                                            <div className="space-y-6">
                                               {weekPlan.learning_materials.videos.map(
                                                 (video: any, videoIndex: number) => (
                                                   <div
                                                     key={videoIndex}
-                                                    className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+                                                    className="bg-white border border-gray-200 rounded-lg overflow-hidden"
                                                   >
-                                                    <h5 className="font-semibold text-gray-900 mb-2">
-                                                      {video.title}
-                                                    </h5>
-                                                    <p className="text-sm text-gray-700 mb-2">
-                                                      {video.description}
-                                                    </p>
-                                                    {video.key_points && video.key_points.length > 0 && (
-                                                      <div className="mb-2">
-                                                        <p className="text-xs font-medium text-gray-700 mb-1">
-                                                          Key Points:
-                                                        </p>
-                                                        <ul className="list-disc list-inside text-xs text-gray-600 space-y-1">
-                                                          {video.key_points.map((point: string, i: number) => (
-                                                            <li key={i}>{point}</li>
-                                                          ))}
-                                                        </ul>
+                                                    {/* Video Player */}
+                                                    {video.video_url && (
+                                                      <div className="mb-4">
+                                                        <VideoPlayer
+                                                          videoUrl={video.video_url}
+                                                          title={video.title}
+                                                          description={video.description}
+                                                        />
                                                       </div>
                                                     )}
+                                                    
+                                                    {/* Video Details */}
+                                                    <div className="p-4">
+                                                      {!video.video_url && (
+                                                        <>
+                                                          <h5 className="font-semibold text-gray-900 mb-2">
+                                                            {video.title}
+                                                          </h5>
+                                                          <p className="text-sm text-gray-700 mb-2">
+                                                            {video.description}
+                                                          </p>
+                                                        </>
+                                                      )}
+                                                      
+                                                      {video.key_points && video.key_points.length > 0 && (
+                                                        <div className="mb-3">
+                                                          <p className="text-sm font-medium text-gray-700 mb-1">
+                                                            Key Points:
+                                                          </p>
+                                                          <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                                                            {video.key_points.map((point: string, i: number) => (
+                                                              <li key={i}>{point}</li>
+                                                            ))}
+                                                          </ul>
+                                                        </div>
+                                                      )}
+                                                      
+                                                      {video.what_to_focus_on && (
+                                                        <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                                          <p className="text-xs font-medium text-yellow-800 mb-1">
+                                                            📌 What to Focus On:
+                                                          </p>
+                                                          <p className="text-sm text-yellow-700">
+                                                            {video.what_to_focus_on}
+                                                          </p>
+                                                        </div>
+                                                      )}
+                                                      
+                                                      {video.recommended_resources &&
+                                                        video.recommended_resources.length > 0 && (
+                                                          <div className="mt-3">
+                                                            <p className="text-xs font-medium text-gray-700 mb-2">
+                                                              Recommended Resources:
+                                                            </p>
+                                                            <div className="flex flex-wrap gap-2">
+                                                              {video.recommended_resources.map(
+                                                                (resource: string, i: number) => (
+                                                                  <span
+                                                                    key={i}
+                                                                    className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded"
+                                                                  >
+                                                                    {resource}
+                                                                  </span>
+                                                                )
+                                                              )}
+                                                            </div>
+                                                          </div>
+                                                        )}
+                                                      
+                                                      {video.duration && (
+                                                        <p className="text-xs text-gray-500 mt-3">
+                                                          ⏱️ Duration: {video.duration}
+                                                        </p>
+                                                      )}
+                                                    </div>
                                                   </div>
                                                 )
                                               )}

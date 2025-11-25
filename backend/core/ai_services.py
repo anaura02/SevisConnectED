@@ -432,11 +432,13 @@ Create a detailed week-by-week learning plan that:
      * Common mistakes and how to avoid them
      * Real-world applications relevant to PNG context
      * Practice problems with full solutions
-   - Videos: Specific recommendations with:
+   - Videos: Specific video recommendations with:
+     * Video URLs (YouTube, Vimeo, or direct links) - MUST include actual video URLs
      * Detailed descriptions of what should be covered
      * Key concepts to explain in depth
      * Examples and demonstrations needed
      * Recommended platforms (Khan Academy, YouTube channels, etc.)
+     * IMPORTANT: Provide actual YouTube video URLs (e.g., https://www.youtube.com/watch?v=VIDEO_ID) for relevant educational content
    - Practice exercises: Comprehensive sets with:
      * Multiple difficulty levels
      * Full worked solutions with explanations
@@ -476,6 +478,7 @@ Return ONLY valid JSON in this exact format:
                     {{
                         "title": "Video topic",
                         "description": "Detailed description of what this video should comprehensively cover for Grade {grade_level} students",
+                        "video_url": "YouTube URL or embed URL (e.g., https://www.youtube.com/watch?v=VIDEO_ID or https://www.youtube.com/embed/VIDEO_ID)",
                         "key_points": ["Expanded point 1 with explanation", "Expanded point 2 with explanation"],
                         "duration": "X minutes",
                         "recommended_resources": ["Specific YouTube channels", "Khan Academy specific topics", "Other educational platforms"],

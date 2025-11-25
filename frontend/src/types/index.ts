@@ -99,6 +99,7 @@ export interface LearningMaterial {
   videos?: Array<{
     title: string;
     description: string;
+    video_url?: string; // YouTube URL or embed URL
     key_points: string[];
     duration: string;
     recommended_resources: string[];
