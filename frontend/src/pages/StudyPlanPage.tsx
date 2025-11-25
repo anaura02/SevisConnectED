@@ -724,8 +724,8 @@ export const StudyPlanPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Floating Chatbot */}
-      <FloatingChatbot subject={subject} />
+      {/* Floating Chatbot - Context-aware of study plan */}
+      <FloatingChatbot subject={subject} studyPlan={learningPath} />
     </div>
   );
 };

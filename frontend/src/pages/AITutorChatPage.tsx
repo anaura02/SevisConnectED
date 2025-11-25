@@ -87,10 +87,31 @@ export const AITutorChatPage: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">AI Tutor Chat</h1>
-            <p className="text-gray-600">
-              Ask me anything about {subject}! I'm here to help you learn.
-            </p>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">AI Tutor Chat</h1>
+                <p className="text-gray-600">
+                  Ask me anything about {subject}! I'm here to help you learn.
+                </p>
+              </div>
+              {messages.length > 0 && (
+                <button
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to clear the chat history?')) {
+                      setMessages([]);
+                      setError(null);
+                    }
+                  }}
+                  className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors"
+                  title="Clear chat history"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span className="text-sm font-medium">Clear Chat</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Error Message */}

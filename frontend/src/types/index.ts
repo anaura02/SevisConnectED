@@ -209,6 +209,11 @@ export interface TutorChatRequest {
   sevis_pass_id: string;
   message: string;
   subject: 'math';
+  study_plan_context?: {
+    syllabus?: Syllabus;
+    week_plan?: Record<string, any>;
+    daily_tasks?: Record<string, any>;
+  };
 }
 
 export interface TutorChatResponse {

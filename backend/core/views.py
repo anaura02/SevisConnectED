@@ -483,6 +483,7 @@ class TutorChatView(APIView):
         message = request.data.get('message', '')
         subject = request.data.get('subject', 'math')
         chat_history = request.data.get('chat_history', [])
+        study_plan_context = request.data.get('study_plan_context')  # New: study plan context
         
         if not sevis_pass_id:
             return error_response('SevisPass ID is required')
@@ -522,6 +523,10 @@ class TutorChatView(APIView):
                 'grade_level': user.grade_level,
                 'subject': subject,
             }
+        
+        # Add study plan context if provided
+        if study_plan_context:
+            context['study_plan'] = study_plan_context
         
         # Prepare chat history
         messages = chat_session.messages if chat_session.messages else []

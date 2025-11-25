@@ -1,17 +1,19 @@
 /**
  * Floating Chatbot Component
  * A floating action button that opens an AI tutor chat interface
+ * Context-aware: Can see and reference the study plan content
  */
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { tutorApi } from '../api/services';
-import type { ChatMessage } from '../types';
+import type { ChatMessage, LearningPath } from '../types';
 
 interface FloatingChatbotProps {
   subject?: 'math';
+  studyPlan?: LearningPath | null; // Study plan context for the chatbot
 }
 
-export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({ subject = 'math' }) => {
+export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({ subject = 'math', studyPlan = null }) => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -51,10 +53,16 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({ subject = 'mat
     setError(null);
 
     try {
+      // Include study plan context if available
       const response = await tutorApi.chat({
         sevis_pass_id: user.sevis_pass_id,
         message: userMessage.content,
         subject,
+        study_plan_context: studyPlan ? {
+          syllabus: studyPlan.syllabus,
+          week_plan: studyPlan.week_plan,
+          daily_tasks: studyPlan.daily_tasks,
+        } : undefined,
       });
 
       if (response.status === 'success' && response.data) {
@@ -88,10 +96,21 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({ subject = 'mat
     setIsOpen(!isOpen);
     if (!isOpen && messages.length === 0) {
       // Add welcome message when opening for the first time
+      const welcomeMessage = studyPlan
+        ? `Hello! I'm your AI tutor for your study plan. I can see your personalized learning path, including your syllabus modules, week-by-week plan, and learning materials. Feel free to ask me questions like:
+        
+• "What does Module 1 cover?"
+• "Explain Week 2 topics in simple terms"
+• "What should I focus on this week?"
+• "Help me understand [topic] from my study plan"
+
+I'm here to make your learning easier!`
+        : `Hello! I'm your AI tutor. I'm here to help you with ${subject === 'math' ? 'Mathematics' : subject}. Feel free to ask me any questions about your study plan, concepts you're learning, or homework problems!`;
+      
       setMessages([
         {
           role: 'assistant',
-          content: `Hello! I'm your AI tutor. I'm here to help you with ${subject === 'math' ? 'Mathematics' : subject}. Feel free to ask me any questions about your study plan, concepts you're learning, or homework problems!`,
+          content: welcomeMessage,
         },
       ]);
     }
@@ -134,15 +153,33 @@ export const FloatingChatbot: React.FC<FloatingChatbotProps> = ({ subject = 'mat
                 <p className="text-xs text-white/80">Always here to help</p>
               </div>
             </div>
-            <button
-              onClick={handleToggle}
-              className="text-white/80 hover:text-white transition-colors"
-              aria-label="Close chat"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to clear the chat history?')) {
+                    setMessages([]);
+                    setError(null);
+                  }
+                }}
+                className="text-white/80 hover:text-white transition-colors p-1"
+                aria-label="Clear chat"
+                title="Clear chat"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+              <button
+                onClick={handleToggle}
+                className="text-white/80 hover:text-white transition-colors p-1"
+                aria-label="Close chat"
+                title="Close chat"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Messages Container */}

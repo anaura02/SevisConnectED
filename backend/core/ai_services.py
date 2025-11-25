@@ -694,11 +694,12 @@ def tutor_chat(user_message: str, chat_history: List[Dict], context: Dict = None
     """
     Generate AI tutor response for chat interface.
     PRD: AI Teacher Interface
+    Enhanced: Now context-aware of study plan content
     
     Args:
         user_message: Student's question/message
         chat_history: Previous messages in conversation
-        context: Additional context (subject, grade level, weaknesses, etc.)
+        context: Additional context (subject, grade level, weaknesses, study_plan, etc.)
         
     Returns:
         AI tutor's response text
@@ -710,20 +711,52 @@ def tutor_chat(user_message: str, chat_history: List[Dict], context: Dict = None
     subject = context.get('subject', 'math') if context else 'math'
     grade_level = context.get('grade_level', 11) if context else 11
     weaknesses = context.get('weaknesses', {}) if context else {}
+    study_plan = context.get('study_plan', {}) if context else {}
+    
+    # Build study plan context string if available
+    study_plan_context = ""
+    if study_plan:
+        syllabus = study_plan.get('syllabus', {})
+        week_plan = study_plan.get('week_plan', {})
+        
+        study_plan_context = "\n\nSTUDY PLAN CONTEXT (You can reference this when answering questions):\n"
+        
+        if syllabus:
+            study_plan_context += f"Syllabus: {syllabus.get('title', 'N/A')}\n"
+            study_plan_context += f"Overview: {syllabus.get('overview', 'N/A')}\n"
+            modules = syllabus.get('modules', [])
+            if modules:
+                study_plan_context += f"Modules ({len(modules)} total):\n"
+                for i, module in enumerate(modules[:10], 1):  # Limit to first 10 modules
+                    study_plan_context += f"  Module {module.get('module_number', i)}: {module.get('title', 'N/A')}\n"
+                    study_plan_context += f"    Description: {module.get('description', 'N/A')[:200]}...\n"
+                    study_plan_context += f"    Topics: {', '.join(module.get('topics', []))}\n"
+        
+        if week_plan:
+            study_plan_context += f"\nWeek-by-Week Plan ({len(week_plan)} weeks):\n"
+            for week_key, week_data in list(week_plan.items())[:6]:  # Limit to first 6 weeks
+                week_num = week_data.get('week_number', week_key)
+                study_plan_context += f"  Week {week_num}: {week_data.get('focus', 'N/A')}\n"
+                study_plan_context += f"    Topics: {', '.join(week_data.get('topics', []))}\n"
+                study_plan_context += f"    Goals: {', '.join(week_data.get('goals', [])[:3])}\n"
+        
+        study_plan_context += "\nIMPORTANT: When students ask about their study plan (e.g., 'What does Module 1 mean?', 'Explain Week 2', 'What should I focus on?'), reference the specific modules, weeks, topics, and goals from their study plan above. Be specific and helpful."
     
     system_prompt = f"""You are a friendly, patient, and encouraging PNG senior secondary education tutor.
-
-Your role:
-- Explain concepts in simple, clear language appropriate for Grade {grade_level} students
-- Use PNG-relevant examples and contexts
-- Break down complex topics into easy steps
-- Encourage students and build their confidence
-- Adapt explanations to their learning level
-
-Subject: {subject}
-Student's known weaknesses: {json.dumps(list(weaknesses.keys())[:3], indent=2) if weaknesses else "None identified yet"}
-
-Always be supportive, clear, and use simple language. If asked about homework or a problem, provide step-by-step explanations."""
+    
+    Your role:
+    - Explain concepts in simple, clear language appropriate for Grade {grade_level} students
+    - Use PNG-relevant examples and contexts
+    - Break down complex topics into easy steps
+    - Encourage students and build their confidence
+    - Adapt explanations to their learning level
+    - When students ask you to "explain in simple terms" or "explain simply", use very basic language, analogies, and step-by-step breakdowns
+    
+    Subject: {subject}
+    Student's known weaknesses: {json.dumps(list(weaknesses.keys())[:3], indent=2) if weaknesses else "None identified yet"}
+    {study_plan_context}
+    
+    Always be supportive, clear, and use simple language. If asked about homework or a problem, provide step-by-step explanations. When referencing the study plan, be specific about modules, weeks, topics, and learning materials."""
 
     messages = [{"role": "system", "content": system_prompt}]
     
