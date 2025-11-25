@@ -89,3 +89,4 @@ curl -X POST http://127.0.0.1:8000/api/generate/study-plan/ \
 
 This will create a personalized learning path focusing on **Algebra** (the weak topic) while maintaining strength in other areas.
 
+
