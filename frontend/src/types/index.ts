@@ -213,6 +213,7 @@ export interface TutorChatRequest {
 export interface TutorChatResponse {
   response: string;
   session_id: string;
-  messages: ChatMessage[];
+  chat_history: ChatMessage[]; // Backend returns 'chat_history'
+  messages?: ChatMessage[]; // Keep for backward compatibility
 }
 
