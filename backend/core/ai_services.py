@@ -45,6 +45,91 @@ def get_openai_client():
     return _client
 
 
+def _validate_and_clean_video_url(url: str) -> Optional[str]:
+    """
+    Validate and clean YouTube video URLs.
+    Returns None if URL is invalid, otherwise returns cleaned URL.
+    """
+    if not url or not isinstance(url, str):
+        return None
+    
+    url = url.strip()
+    
+    # Check if it's a YouTube URL
+    if 'youtube.com' in url or 'youtu.be' in url:
+        # Extract video ID using various patterns
+        patterns = [
+            r'(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/)([a-zA-Z0-9_-]{11})',
+            r'youtube\.com/v/([a-zA-Z0-9_-]{11})',
+            r'm\.youtube\.com/watch\?v=([a-zA-Z0-9_-]{11})',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, url)
+            if match and match.group(1):
+                video_id = match.group(1)
+                # YouTube video IDs are always 11 characters
+                if len(video_id) == 11:
+                    return f"https://www.youtube.com/watch?v={video_id}"
+        
+        # If it looks like YouTube but we can't extract ID, return None
+        return None
+    
+    # Check if it's a Vimeo URL
+    if 'vimeo.com' in url:
+        match = re.search(r'vimeo\.com/(\d+)', url)
+        if match:
+            return f"https://vimeo.com/{match.group(1)}"
+        return None
+    
+    # Check if it's a direct video file
+    if re.match(r'https?://.*\.(mp4|webm|ogg|mov)(\?.*)?$', url, re.IGNORECASE):
+        return url
+    
+    # If it doesn't match any known format, return None
+    return None
+
+
+def _clean_video_urls_in_study_plan(study_plan: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Recursively clean and validate video URLs in the study plan structure.
+    Removes invalid URLs and fixes valid ones.
+    """
+    if isinstance(study_plan, dict):
+        cleaned = {}
+        for key, value in study_plan.items():
+            if key == 'video_url' and isinstance(value, str):
+                # Validate and clean video URL
+                cleaned_url = _validate_and_clean_video_url(value)
+                if cleaned_url:
+                    cleaned[key] = cleaned_url
+                # If invalid, don't include it (will show as "no video URL" in frontend)
+            elif key == 'videos' and isinstance(value, list):
+                # Clean video URLs in videos array
+                cleaned_videos = []
+                for video in value:
+                    if isinstance(video, dict) and 'video_url' in video:
+                        cleaned_video = video.copy()
+                        cleaned_url = _validate_and_clean_video_url(video.get('video_url', ''))
+                        if cleaned_url:
+                            cleaned_video['video_url'] = cleaned_url
+                        else:
+                            # Remove invalid video_url but keep the video entry
+                            cleaned_video.pop('video_url', None)
+                        cleaned_videos.append(cleaned_video)
+                    else:
+                        cleaned_videos.append(_clean_video_urls_in_study_plan(video) if isinstance(video, dict) else video)
+                cleaned[key] = cleaned_videos
+            else:
+                # Recursively clean nested structures
+                cleaned[key] = _clean_video_urls_in_study_plan(value) if isinstance(value, (dict, list)) else value
+        return cleaned
+    elif isinstance(study_plan, list):
+        return [_clean_video_urls_in_study_plan(item) for item in study_plan]
+    else:
+        return study_plan
+
+
 def _parse_json_with_recovery(json_text: str, context: str = "json") -> Dict[str, Any]:
     """
     Parse JSON with error recovery for common AI-generated JSON issues.
@@ -334,12 +419,28 @@ def generate_study_plan(weakness_profile: Dict, subject: str, grade_level: int, 
     # If topic_scores provided, use them for more specific analysis
     # topic_scores format: {'algebra': 70, 'geometry': 55, 'trigonometry': 55, 'calculus': 60}
     if topic_scores:
-        # Identify weak topics from actual scores
-        weak_topics = [topic for topic, score in topic_scores.items() if score < 60]
+        # Identify ALL weak topics from actual scores (below 60%)
+        # Sort by score (lowest first) to prioritize the weakest topics
+        weak_topics_with_scores = [(topic, score) for topic, score in topic_scores.items() if score < 60]
+        weak_topics_with_scores.sort(key=lambda x: x[1])  # Sort by score, lowest first
+        weak_topics = [topic for topic, score in weak_topics_with_scores]  # ALL weak topics
         strong_topics = [topic for topic, score in topic_scores.items() if score >= 60]
+        
+        # Calculate number of weeks needed: 1-2 weeks per weak topic, minimum 4 weeks
+        num_weak_topics = len(weak_topics)
+        num_weeks = max(4, min(12, num_weak_topics * 2))  # 4-12 weeks, 2 weeks per topic max
     else:
-        weak_topics = list(weaknesses.keys())[:5] if weaknesses else []
-        strong_topics = list(strengths.keys())[:3] if strengths else []
+        # Use all weaknesses, not just first 5
+        weak_topics = list(weaknesses.keys()) if weaknesses else []
+        strong_topics = list(strengths.keys()) if strengths else []
+        
+        # Calculate weeks based on number of weak topics
+        num_weak_topics = len(weak_topics)
+        num_weeks = max(4, min(12, num_weak_topics * 2))  # 4-12 weeks, 2 weeks per topic max
+    
+    # Prepare weak topics list for prompts
+    weak_topics_list = json.dumps(weak_topics, indent=2) if weak_topics else "[]"
+    weak_topics_count = len(weak_topics)
     
     # Step 1: Generate comprehensive syllabus
     syllabus_prompt = f"""You are an expert PNG senior secondary education tutor. Create a comprehensive, detailed syllabus for Grade {grade_level} {subject} students.
@@ -348,10 +449,17 @@ Student Profile:
 - Grade Level: {grade_level} (Senior Secondary - ages 16-18)
 - Subject: {subject}
 - Difficulty Level: {recommended_difficulty}
-- Top Weaknesses: {json.dumps(weak_topics, indent=2) if topic_scores else json.dumps(list(weaknesses.keys())[:5], indent=2)}
-- Strengths: {json.dumps(strong_topics, indent=2) if topic_scores else json.dumps(list(strengths.keys())[:3], indent=2)}
+- ALL Weak Topics ({weak_topics_count} topics below 60%): {weak_topics_list}
+- Strong Topics: {json.dumps(strong_topics, indent=2) if strong_topics else '[]'}
 - Topic Performance Scores: {json.dumps(topic_scores, indent=2) if topic_scores else 'N/A'}
 - Performance Status: {'Poor performing - needs comprehensive remedial support with detailed explanations' if is_poor_performing else 'Performing adequately but needs reinforcement'}
+
+MANDATORY COVERAGE REQUIREMENT:
+You MUST create a {num_weeks}-week plan that covers ALL {weak_topics_count} weak topics listed above. Each weak topic must receive dedicated coverage with:
+- At least 1-2 weeks of focused learning
+- Comprehensive lecture notes, videos, and practice exercises
+- Clear progression from basics to mastery
+- Assessment and reinforcement activities
 
 IMPORTANT: These are Grade {grade_level} students (16-18 years old). Create content that:
 - Is appropriate for their age and cognitive level
@@ -392,7 +500,20 @@ Return ONLY valid JSON in this exact format:
 Make it comprehensive, curriculum-aligned, and appropriate for PNG Grade {grade_level} senior secondary students."""
 
     # Step 2: Generate detailed week-by-week plan with learning materials
-    week_plan_prompt = f"""You are an expert PNG senior secondary education tutor creating a detailed 4-6 week learning plan with comprehensive, expanded learning materials for Grade {grade_level} students.
+    # CRITICAL: Must cover ALL weak topics comprehensively
+    week_plan_prompt = f"""You are an expert PNG senior secondary education tutor creating a detailed {num_weeks}-week comprehensive learning plan with expanded learning materials for Grade {grade_level} students.
+
+CRITICAL REQUIREMENT: You MUST create a learning plan that covers ALL {weak_topics_count} weak topics comprehensively. Each weak topic must have dedicated week(s) with thorough coverage.
+
+ALL WEAK TOPICS THAT MUST BE COVERED (below 60% performance):
+{weak_topics_list}
+
+The learning plan must:
+1. Cover EVERY single weak topic listed above - no exceptions
+2. Allocate sufficient time (1-2 weeks) for each weak topic to ensure mastery
+3. Total {num_weeks} weeks of structured learning
+4. Progress from foundational concepts to advanced applications
+5. Include review and reinforcement weeks
 
 CRITICAL JSON FORMATTING REQUIREMENTS (MUST FOLLOW EXACTLY):
 1. ALL strings MUST use double quotes (") - NEVER single quotes (')
@@ -422,9 +543,10 @@ CRITICAL REQUIREMENTS FOR GRADE {grade_level} STUDENTS:
 - Use appropriate academic language for senior secondary level
 - Build critical thinking and analytical skills
 
-Create a detailed week-by-week learning plan that:
-1. Addresses ALL identified weaknesses systematically with comprehensive coverage
-2. Includes EXPANDED learning materials for EACH week:
+Create a detailed {num_weeks}-week learning plan that:
+1. MANDATORY: Addresses EVERY SINGLE weak topic from the list above - ensure ALL {weak_topics_count} weak topics are covered
+2. Allocates 1-2 weeks per weak topic to ensure thorough understanding and mastery
+3. Includes EXPANDED learning materials for EACH week:
    - Lecture notes: Detailed, comprehensive explanations (500-800 words each) with:
      * Clear introduction to concepts
      * Step-by-step explanations with reasoning
@@ -448,13 +570,14 @@ Create a detailed week-by-week learning plan that:
 3. Provides detailed daily tasks with specific learning activities
 4. Is structured to help students build deep understanding, not just memorize
 
-Return ONLY valid JSON in this exact format:
+Return ONLY valid JSON in this exact format with {num_weeks} weeks (week_1 through week_{num_weeks}):
 {{
     "week_plan": {{
         "week_1": {{
             "week_number": 1,
-            "focus": "Week focus/title",
-            "topics": ["topic1", "topic2"],
+            "focus": "Week focus/title (must address one or more weak topics)",
+            "topics": ["weak_topic_1", "related_concepts"],
+            "weak_topics_covered": ["weak_topic_1"],  // List which weak topics this week addresses
             "goals": ["Detailed goal 1", "Detailed goal 2"],
             "learning_materials": {{
                 "lecture_notes": [
@@ -478,7 +601,7 @@ Return ONLY valid JSON in this exact format:
                     {{
                         "title": "Video topic",
                         "description": "Detailed description of what this video should comprehensively cover for Grade {grade_level} students",
-                        "video_url": "YouTube URL or embed URL (e.g., https://www.youtube.com/watch?v=VIDEO_ID or https://www.youtube.com/embed/VIDEO_ID)",
+                        "video_url": "MUST be a valid YouTube URL in one of these formats: https://www.youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID. VIDEO_ID must be exactly 11 characters (alphanumeric). DO NOT use placeholder URLs, playback IDs, or invalid formats. Use real educational YouTube video URLs for the topic.",
                         "key_points": ["Expanded point 1 with explanation", "Expanded point 2 with explanation"],
                         "duration": "X minutes",
                         "recommended_resources": ["Specific YouTube channels", "Khan Academy specific topics", "Other educational platforms"],
@@ -616,6 +739,10 @@ Make it comprehensive, detailed, and appropriate for Grade {grade_level} senior 
             "week_plan": week_plan_data.get("week_plan", {}),
             "daily_tasks": week_plan_data.get("daily_tasks", {})
         }
+        
+        # Clean and validate video URLs in the study plan
+        result = _clean_video_urls_in_study_plan(result)
+        print(f"✅ Video URLs validated and cleaned")
         
         # Verify result structure
         print(f"\n{'='*60}")
