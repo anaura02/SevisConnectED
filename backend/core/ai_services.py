@@ -543,6 +543,18 @@ CRITICAL REQUIREMENTS FOR GRADE {grade_level} STUDENTS:
 - Use appropriate academic language for senior secondary level
 - Build critical thinking and analytical skills
 
+CRITICAL VIDEO URL REQUIREMENT:
+- You MUST provide REAL, WORKING YouTube video URLs for EVERY video in the learning materials
+- Each video object MUST include a valid "video_url" field with an actual YouTube URL
+- Find appropriate educational videos from reputable channels:
+  * Math: Khan Academy (e.g., https://www.youtube.com/watch?v=NybHckSEQBI), The Organic Chemistry Tutor, Math Antics, Eddie Woo
+  * English: Khan Academy, Crash Course, TED-Ed, English with Lucy
+- Search for videos that match the topic exactly
+- Use format: https://www.youtube.com/watch?v=VIDEO_ID where VIDEO_ID is exactly 11 characters
+- DO NOT use placeholder URLs, playback IDs, or make up URLs
+- If you cannot find a specific video, use a general educational video from Khan Academy or similar channel
+- Every video recommendation MUST have a working video_url that students can click and watch
+
 Create a detailed {num_weeks}-week learning plan that:
 1. MANDATORY: Addresses EVERY SINGLE weak topic from the list above - ensure ALL {weak_topics_count} weak topics are covered
 2. Allocates 1-2 weeks per weak topic to ensure thorough understanding and mastery
@@ -554,13 +566,19 @@ Create a detailed {num_weeks}-week learning plan that:
      * Common mistakes and how to avoid them
      * Real-world applications relevant to PNG context
      * Practice problems with full solutions
-   - Videos: Specific video recommendations with:
-     * Video URLs (YouTube, Vimeo, or direct links) - MUST include actual video URLs
+   - Videos: CRITICAL - You MUST provide REAL, WORKING YouTube video URLs for each video recommendation:
+     * MANDATORY: Each video MUST have a valid video_url field with a real YouTube URL
+     * Find appropriate educational videos from reputable channels:
+       - Math: Khan Academy, The Organic Chemistry Tutor, Math Antics, Eddie Woo, Professor Leonard
+       - English: Khan Academy, Crash Course, TED-Ed, English with Lucy
+     * Search for videos that match the topic exactly (e.g., "algebra basics", "quadratic equations", "grammar rules")
+     * Use format: https://www.youtube.com/watch?v=VIDEO_ID (VIDEO_ID is 11 characters)
+     * DO NOT use placeholder URLs, playback IDs, or make up URLs
+     * Test that the URL format is correct before including it
+     * Each video should have: title, description, video_url (REQUIRED), key_points, duration
      * Detailed descriptions of what should be covered
      * Key concepts to explain in depth
      * Examples and demonstrations needed
-     * Recommended platforms (Khan Academy, YouTube channels, etc.)
-     * IMPORTANT: Provide actual YouTube video URLs (e.g., https://www.youtube.com/watch?v=VIDEO_ID) for relevant educational content
    - Practice exercises: Comprehensive sets with:
      * Multiple difficulty levels
      * Full worked solutions with explanations
@@ -601,7 +619,7 @@ Return ONLY valid JSON in this exact format with {num_weeks} weeks (week_1 throu
                     {{
                         "title": "Video topic",
                         "description": "Detailed description of what this video should comprehensively cover for Grade {grade_level} students",
-                        "video_url": "MUST be a valid YouTube URL in one of these formats: https://www.youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID. VIDEO_ID must be exactly 11 characters (alphanumeric). DO NOT use placeholder URLs, playback IDs, or invalid formats. Use real educational YouTube video URLs for the topic.",
+                        "video_url": "CRITICAL: You MUST provide a REAL, WORKING YouTube video URL. Use one of these formats: https://www.youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID. The VIDEO_ID must be exactly 11 characters (alphanumeric). Find appropriate educational videos from channels like: Khan Academy, The Organic Chemistry Tutor, Math Antics, Crash Course, Eddie Woo, or other reputable educational channels. Search for videos that match the topic exactly. Example: For 'algebra', use https://www.youtube.com/watch?v=NybHckSEQBI (Khan Academy Algebra Basics). DO NOT use placeholder URLs, playback IDs, or make up URLs. You MUST provide a real, existing YouTube video URL that students can click and watch.",
                         "key_points": ["Expanded point 1 with explanation", "Expanded point 2 with explanation"],
                         "duration": "X minutes",
                         "recommended_resources": ["Specific YouTube channels", "Khan Academy specific topics", "Other educational platforms"],
@@ -650,7 +668,15 @@ Return ONLY valid JSON in this exact format with {num_weeks} weeks (week_1 throu
     }}
 }}
 
-Make it comprehensive, detailed, and appropriate for Grade {grade_level} senior secondary students. Expand on all explanations - students need to understand the reasoning, not just memorize steps."""
+Make it comprehensive, detailed, and appropriate for Grade {grade_level} senior secondary students. Expand on all explanations - students need to understand the reasoning, not just memorize steps.
+
+FINAL REMINDER ABOUT VIDEO URLs:
+- EVERY video object in the learning_materials.videos array MUST have a "video_url" field
+- The video_url MUST be a real, working YouTube URL (format: https://www.youtube.com/watch?v=VIDEO_ID)
+- Use actual educational videos from Khan Academy, The Organic Chemistry Tutor, or similar reputable channels
+- DO NOT leave video_url empty or use placeholder text
+- Students need to be able to click the link and watch the video immediately
+- If unsure about a specific video, use a general Khan Academy video for the topic (e.g., https://www.youtube.com/watch?v=NybHckSEQBI for algebra basics)"""
 
     try:
         # First, generate the syllabus
@@ -700,7 +726,7 @@ Make it comprehensive, detailed, and appropriate for Grade {grade_level} senior 
             week_plan_response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
-                    {"role": "system", "content": "You are an expert PNG Grade 11-12 education tutor. You MUST respond with valid JSON only. Keep lecture note content to 200-300 words maximum. Provide comprehensive, expanded explanations appropriate for senior secondary students (16-18 years old). Include detailed lecture notes, video recommendations, and practice exercises."},
+                    {"role": "system", "content": "You are an expert PNG Grade 11-12 education tutor. You MUST respond with valid JSON only. CRITICAL: Every video object MUST include a real, working YouTube video_url (format: https://www.youtube.com/watch?v=VIDEO_ID). Use actual educational videos from Khan Academy, The Organic Chemistry Tutor, or similar reputable channels. Keep lecture note content to 200-300 words maximum. Provide comprehensive, expanded explanations appropriate for senior secondary students (16-18 years old). Include detailed lecture notes, video recommendations with REAL YouTube URLs, and practice exercises."},
                     {"role": "user", "content": week_plan_prompt}
                 ],
                 temperature=0.3,  # Lower temperature for more consistent JSON
@@ -713,7 +739,7 @@ Make it comprehensive, detailed, and appropriate for Grade {grade_level} senior 
             week_plan_response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
-                    {"role": "system", "content": "You are an expert PNG Grade 11-12 education tutor. CRITICAL: You MUST respond with valid, complete JSON only. All strings must be properly escaped. Use \\n for newlines, \\\" for quotes. Keep lecture note content to 200-300 words maximum. Ensure all JSON is properly closed. Provide comprehensive, expanded explanations appropriate for senior secondary students (16-18 years old). Include detailed lecture notes, video recommendations, and practice exercises."},
+                    {"role": "system", "content": "You are an expert PNG Grade 11-12 education tutor. CRITICAL: You MUST respond with valid, complete JSON only. All strings must be properly escaped. Use \\n for newlines, \\\" for quotes. Keep lecture note content to 200-300 words maximum. Ensure all JSON is properly closed. MANDATORY: Every video object MUST include a real, working YouTube video_url field (format: https://www.youtube.com/watch?v=VIDEO_ID). Use actual educational videos from Khan Academy, The Organic Chemistry Tutor, or similar reputable channels. DO NOT use placeholder URLs. Provide comprehensive, expanded explanations appropriate for senior secondary students (16-18 years old). Include detailed lecture notes, video recommendations with REAL YouTube URLs, and practice exercises."},
                     {"role": "user", "content": week_plan_prompt}
                 ],
                 temperature=0.3,
