@@ -24,6 +24,63 @@ interface PracticeExerciseModalProps {
   onClose: () => void;
 }
 
+// Helper function to extract numeric answer from text
+// Extracts the final numeric answer from explanations like "x = 4" or just "4"
+const extractNumericAnswer = (text: string): string | null => {
+  if (!text) return null;
+  
+  const normalized = text.trim().toLowerCase();
+  
+  // First, try to find patterns like "x = 4", "answer = 4", "= 4" (usually the final answer)
+  const equalsPattern = /(?:x|answer|result|solution|equals?|is)\s*[=:]\s*(-?\d+\.?\d*)/gi;
+  const equalsMatches = [...normalized.matchAll(equalsPattern)];
+  if (equalsMatches.length > 0) {
+    // Get the last match (usually the final answer)
+    const lastMatch = equalsMatches[equalsMatches.length - 1];
+    const num = parseFloat(lastMatch[1]);
+    if (!isNaN(num)) {
+      return num.toString();
+    }
+  }
+  
+  // If no equals pattern, find all numbers and take the last one (usually the final answer)
+  const allNumbers = normalized.match(/-?\d+\.?\d*/g);
+  if (allNumbers && allNumbers.length > 0) {
+    const lastNumber = parseFloat(allNumbers[allNumbers.length - 1]);
+    if (!isNaN(lastNumber)) {
+      return lastNumber.toString();
+    }
+  }
+  
+  // If text is just a number, return it
+  const directNumber = parseFloat(normalized);
+  if (!isNaN(directNumber)) {
+    return directNumber.toString();
+  }
+  
+  return null;
+};
+
+// Helper function to normalize answers for comparison
+const normalizeAnswer = (answer: string): string | null => {
+  if (!answer) return null;
+  
+  // First try to extract numeric answer
+  const numericAnswer = extractNumericAnswer(answer);
+  if (numericAnswer !== null) {
+    return numericAnswer;
+  }
+  
+  // Fallback: normalize the text answer
+  return answer
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .replace(/[.,;:!?]/g, '') // Remove punctuation
+    .replace(/\s*=\s*/g, '=') // Normalize equals signs
+    .trim();
+};
+
 export const PracticeExerciseModal: React.FC<PracticeExerciseModalProps> = ({
   exercise,
   isOpen,
@@ -40,8 +97,15 @@ export const PracticeExerciseModal: React.FC<PracticeExerciseModalProps> = ({
   const currentQuestion = exercise.questions[currentQuestionIndex];
   const userAnswer = userAnswers[currentQuestionIndex] || '';
   const isSubmitted = submittedAnswers[currentQuestionIndex] || false;
+  
+  // Compare answers by extracting numeric values
+  const userAnswerNormalized = normalizeAnswer(userAnswer);
+  const solutionNormalized = normalizeAnswer(currentQuestion.solution);
   const isCorrect = isSubmitted && 
-    normalizeAnswer(userAnswer) === normalizeAnswer(currentQuestion.solution);
+    userAnswerNormalized !== null && 
+    solutionNormalized !== null &&
+    userAnswerNormalized === solutionNormalized;
+  
   const showHint = showHints[currentQuestionIndex] || false;
   const showExp = showExplanation[currentQuestionIndex] || false;
 
@@ -50,17 +114,6 @@ export const PracticeExerciseModal: React.FC<PracticeExerciseModalProps> = ({
       ...prev,
       [currentQuestionIndex]: value,
     }));
-  };
-
-  const normalizeAnswer = (answer: string): string => {
-    // Remove extra whitespace, convert to lowercase, remove common punctuation
-    return answer
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, ' ') // Normalize whitespace
-      .replace(/[.,;:!?]/g, '') // Remove punctuation
-      .replace(/\s*=\s*/g, '=') // Normalize equals signs
-      .trim();
   };
 
   const handleSubmitAnswer = () => {
@@ -125,7 +178,11 @@ export const PracticeExerciseModal: React.FC<PracticeExerciseModalProps> = ({
       const idx = parseInt(index);
       const userAns = userAnswers[idx] || '';
       const correctAns = exercise.questions[idx]?.solution || '';
-      return normalizeAnswer(userAns) === normalizeAnswer(correctAns);
+      const userNormalized = normalizeAnswer(userAns);
+      const correctNormalized = normalizeAnswer(correctAns);
+      return userNormalized !== null && 
+             correctNormalized !== null &&
+             userNormalized === correctNormalized;
     }
   ).length;
 

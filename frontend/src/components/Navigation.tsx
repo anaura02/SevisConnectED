@@ -39,7 +39,7 @@ export const Navigation: React.FC = () => {
                   to="/diagnostic"
                   className="px-4 py-2 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all font-medium"
                 >
-                  Diagnostic
+                  Exams & Tests
                 </Link>
                 <Link
                   to="/study-plan"
