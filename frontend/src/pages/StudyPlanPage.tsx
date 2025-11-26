@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { useStudyPlan } from '../context/StudyPlanContext';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { FloatingChatbot } from '../components/FloatingChatbot';
+import { PracticeExerciseModal } from '../components/PracticeExerciseModal';
 import type { WeaknessProfile, LearningPath, Syllabus, LearningMaterial } from '../types';
 
 export const StudyPlanPage: React.FC = () => {
@@ -31,6 +32,8 @@ export const StudyPlanPage: React.FC = () => {
   const [generating, setGenerating] = useState(false);
   const [expandedWeek, setExpandedWeek] = useState<string | null>(null);
   const [expandedNote, setExpandedNote] = useState<string | null>(null);
+  const [selectedExercise, setSelectedExercise] = useState<any | null>(null); // Selected practice exercise
+  const [isExerciseModalOpen, setIsExerciseModalOpen] = useState(false);
   
   // Card expansion states
   const [expandedCards, setExpandedCards] = useState({
@@ -76,6 +79,16 @@ export const StudyPlanPage: React.FC = () => {
       ...prev,
       [cardName]: !prev[cardName],
     }));
+  };
+
+  const handleOpenExercise = (exercise: any) => {
+    setSelectedExercise(exercise);
+    setIsExerciseModalOpen(true);
+  };
+
+  const handleCloseExercise = () => {
+    setIsExerciseModalOpen(false);
+    setSelectedExercise(null);
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -745,7 +758,8 @@ export const StudyPlanPage: React.FC = () => {
                                                 (exercise: any, exIndex: number) => (
                                                   <div
                                                     key={exIndex}
-                                                    className="border border-gray-200 rounded-lg p-4"
+                                                    className="border border-gray-200 rounded-lg p-4 hover:border-primary-400 hover:shadow-md transition-all cursor-pointer bg-white"
+                                                    onClick={() => handleOpenExercise(exercise)}
                                                   >
                                                     <div className="flex items-start justify-between mb-2">
                                                       <h5 className="font-semibold text-gray-900">
@@ -766,6 +780,20 @@ export const StudyPlanPage: React.FC = () => {
                                                         {exercise.description}
                                                       </p>
                                                     )}
+                                                    <div className="flex items-center justify-between mt-3">
+                                                      <span className="text-xs text-gray-500">
+                                                        {exercise.questions?.length || 0} question{exercise.questions?.length !== 1 ? 's' : ''}
+                                                      </span>
+                                                      <button
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          handleOpenExercise(exercise);
+                                                        }}
+                                                        className="px-4 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 transition-colors font-medium"
+                                                      >
+                                                        Start Exercise →
+                                                      </button>
+                                                    </div>
                                                   </div>
                                                 )
                                               )}
@@ -820,6 +848,15 @@ export const StudyPlanPage: React.FC = () => {
 
       {/* Floating Chatbot - Context-aware of study plan */}
       <FloatingChatbot subject={subject} studyPlan={learningPath} />
+
+      {/* Practice Exercise Modal */}
+      {selectedExercise && (
+        <PracticeExerciseModal
+          exercise={selectedExercise}
+          isOpen={isExerciseModalOpen}
+          onClose={handleCloseExercise}
+        />
+      )}
     </div>
   );
 };
