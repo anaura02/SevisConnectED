@@ -55,6 +55,30 @@ class Command(BaseCommand):
                 'email': 'david.johnson@example.com',
                 'password': make_password(DEFAULT_PASSWORD),
             },
+            {
+                'sevis_pass_id': 'SEVIS-006',
+                'name': 'Emma Thompson',
+                'grade_level': 11,
+                'school': 'Wewak Secondary School',
+                'email': 'emma.thompson@example.com',
+                'password': make_password(DEFAULT_PASSWORD),
+            },
+            {
+                'sevis_pass_id': 'SEVIS-007',
+                'name': 'James Anderson',
+                'grade_level': 12,
+                'school': 'Kokopo High School',
+                'email': 'james.anderson@example.com',
+                'password': make_password(DEFAULT_PASSWORD),
+            },
+            {
+                'sevis_pass_id': 'SEVIS-008',
+                'name': 'Lisa Martinez',
+                'grade_level': 11,
+                'school': 'Alotau Secondary School',
+                'email': 'lisa.martinez@example.com',
+                'password': make_password(DEFAULT_PASSWORD),
+            },
         ]
 
         created_count = 0

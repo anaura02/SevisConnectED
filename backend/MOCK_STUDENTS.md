@@ -11,6 +11,9 @@ You can login with any of these SevisPass IDs:
 | `SEVIS-003` | Peter Wilson | 12 | Goroka High School | `123456` |
 | `SEVIS-004` | Sarah Brown | 12 | Mount Hagen Secondary | `123456` |
 | `SEVIS-005` | David Johnson | 11 | Madang Secondary School | `123456` |
+| `SEVIS-006` | Emma Thompson | 11 | Wewak Secondary School | `123456` ⚠️ |
+| `SEVIS-007` | James Anderson | 12 | Kokopo High School | `123456` ⚠️ |
+| `SEVIS-008` | Lisa Martinez | 11 | Alotau Secondary School | `123456` ⚠️ |
 
 ## How to Use
 
@@ -52,4 +55,5 @@ This will create:
 - You can still create new students by entering a different SevisPass ID
 - The system will auto-create users on first login if they don't exist
 - For MVP demo, any SevisPass ID will work (creates new user if not found)
+- ⚠️ **SEVIS-006, SEVIS-007, SEVIS-008** are configured with **below 60% average grades** to test study plan generation for struggling students
 

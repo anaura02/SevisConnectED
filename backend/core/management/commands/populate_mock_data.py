@@ -63,13 +63,22 @@ class Command(BaseCommand):
         subjects = ['math', 'english']
         diagnostics_created = 0
         
+        # Students with low performance (below 60% average)
+        low_performing_students = ['SEVIS-006', 'SEVIS-007', 'SEVIS-008']
+        is_low_performing = student.sevis_pass_id in low_performing_students
+        
         for subject in subjects:
             # Create 5-8 diagnostic questions per subject
             num_questions = random.randint(5, 8)
             
             for i in range(num_questions):
-                is_correct = random.choice([True, False, True, True])  # 75% chance correct
-                score = random.uniform(0.7, 1.0) if is_correct else random.uniform(0.0, 0.6)
+                # Low performing students: 40% chance correct, others: 75% chance
+                if is_low_performing:
+                    is_correct = random.choice([True, False, False, False, False])  # 40% chance correct
+                    score = random.uniform(0.5, 0.7) if is_correct else random.uniform(0.0, 0.5)
+                else:
+                    is_correct = random.choice([True, False, True, True])  # 75% chance correct
+                    score = random.uniform(0.7, 1.0) if is_correct else random.uniform(0.0, 0.6)
                 time_taken = random.randint(30, 300)  # 30 seconds to 5 minutes
                 
                 # Generate realistic question/answer pairs
@@ -122,6 +131,10 @@ class Command(BaseCommand):
         subjects = ['math', 'english']
         weaknesses_created = 0
         
+        # Students with low performance (below 60% average)
+        low_performing_students = ['SEVIS-006', 'SEVIS-007', 'SEVIS-008']
+        is_low_performing = student.sevis_pass_id in low_performing_students
+        
         for subject in subjects:
             # Check if weakness profile already exists
             if WeaknessProfile.objects.filter(user=student, subject=subject).exists():
@@ -149,20 +162,35 @@ class Command(BaseCommand):
                     'Punctuation',
                 ]
             
-            # Select 2-3 weakness topics and 2-3 strength topics
-            selected_weaknesses = random.sample(topics, random.randint(2, 3))
-            remaining_topics = [t for t in topics if t not in selected_weaknesses]
-            selected_strengths = random.sample(remaining_topics, random.randint(2, 3)) if remaining_topics else []
-            
-            # Create weaknesses dict: topic -> weakness_score (0.0 to 0.5, lower is worse)
-            weaknesses_dict = {
-                topic: round(random.uniform(0.1, 0.5), 2) for topic in selected_weaknesses
-            }
-            
-            # Create strengths dict: topic -> strength_score (0.6 to 1.0, higher is better)
-            strengths_dict = {
-                topic: round(random.uniform(0.6, 1.0), 2) for topic in selected_strengths
-            }
+            if is_low_performing:
+                # Low performing: 4-5 weakness topics, 1-2 strength topics
+                selected_weaknesses = random.sample(topics, random.randint(4, 5))
+                remaining_topics = [t for t in topics if t not in selected_weaknesses]
+                selected_strengths = random.sample(remaining_topics, random.randint(1, 2)) if remaining_topics else []
+                
+                # Lower scores for weaknesses (0.1 to 0.4)
+                weaknesses_dict = {
+                    topic: round(random.uniform(0.1, 0.4), 2) for topic in selected_weaknesses
+                }
+                # Lower scores for strengths too (0.5 to 0.7)
+                strengths_dict = {
+                    topic: round(random.uniform(0.5, 0.7), 2) for topic in selected_strengths
+                }
+            else:
+                # Normal performing: 2-3 weakness topics, 2-3 strength topics
+                selected_weaknesses = random.sample(topics, random.randint(2, 3))
+                remaining_topics = [t for t in topics if t not in selected_weaknesses]
+                selected_strengths = random.sample(remaining_topics, random.randint(2, 3)) if remaining_topics else []
+                
+                # Create weaknesses dict: topic -> weakness_score (0.0 to 0.5, lower is worse)
+                weaknesses_dict = {
+                    topic: round(random.uniform(0.1, 0.5), 2) for topic in selected_weaknesses
+                }
+                
+                # Create strengths dict: topic -> strength_score (0.6 to 1.0, higher is better)
+                strengths_dict = {
+                    topic: round(random.uniform(0.6, 1.0), 2) for topic in selected_strengths
+                }
             
             # Calculate baseline score (average of all scores)
             all_scores = list(weaknesses_dict.values()) + list(strengths_dict.values())
@@ -258,12 +286,19 @@ class Command(BaseCommand):
         
         progress_created = 0
         
+        # Students with low performance (below 60% average)
+        low_performing_students = ['SEVIS-006', 'SEVIS-007', 'SEVIS-008']
+        is_low_performing = student.sevis_pass_id in low_performing_students
+        
         # Create topic-level scores for each student
         # Each topic gets a score between 40-80% (some variation for realism)
         for topic in math_topics:
             # Generate a base score for this student for this topic
-            # Some students will be weaker in certain topics
-            base_score = round(random.uniform(45, 75), 1)
+            # Low performing students: 35-55%, others: 45-75%
+            if is_low_performing:
+                base_score = round(random.uniform(35, 55), 1)
+            else:
+                base_score = round(random.uniform(45, 75), 1)
             
             # Create 2-4 records per topic (showing progression over time)
             num_records = random.randint(2, 4)
