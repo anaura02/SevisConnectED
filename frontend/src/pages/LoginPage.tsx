@@ -2,7 +2,7 @@
  * Login Page - SevisPass authentication
  */
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -156,6 +156,16 @@ export const LoginPage: React.FC = () => {
         <p className="mt-4 text-xs text-center text-gray-500">
           For MVP demo: Default password is <span className="font-semibold">123456</span> for all accounts
         </p>
+
+        {/* Select a Plan Link */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <Link
+            to="/billing"
+            className="block w-full text-center text-primary-600 hover:text-primary-700 font-medium transition-colors"
+          >
+            Select a Plan →
+          </Link>
+        </div>
           </div>
         </div>
         <Footer />

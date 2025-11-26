@@ -7,6 +7,7 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DiagnosticTestPage } from './pages/DiagnosticTestPage';
 import { ProgressPage } from './pages/ProgressPage';
+import { BillingPage } from './pages/BillingPage';
 import { StudyPlanPage } from './pages/StudyPlanPage';
 import { AITutorChatPage } from './pages/AITutorChatPage';
 
@@ -31,6 +32,7 @@ function App() {
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/billing" element={<BillingPage />} />
 
         {/* Protected Routes */}
         <Route
@@ -75,7 +77,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         {/* Catch all - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

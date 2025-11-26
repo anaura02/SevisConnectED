@@ -31,6 +31,12 @@ export const Header: React.FC = () => {
               Home
             </Link>
             <Link
+              to="/billing"
+              className="text-gray-700 hover:text-primary-600 transition-colors font-medium"
+            >
+              Pricing
+            </Link>
+            <Link
               to="/login"
               className="text-gray-700 hover:text-primary-600 transition-colors font-medium"
             >
