@@ -4,6 +4,8 @@
  */
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
 
 export const HomePage: React.FC = () => {
   const { user, loading } = useAuth();
@@ -21,7 +23,9 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <>
+      <Header />
+      <div className="min-h-screen relative overflow-hidden">
       {/* Animated Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary-500 via-primary-400 to-primary-600 animate-gradient">
         {/* Animated overlay patterns */}
@@ -290,6 +294,8 @@ export const HomePage: React.FC = () => {
           opacity: 0;
         }
       `}</style>
-    </div>
+      </div>
+      <Footer />
+    </>
   );
 };

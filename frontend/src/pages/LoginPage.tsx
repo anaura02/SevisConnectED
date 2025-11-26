@@ -4,6 +4,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
 
 export const LoginPage: React.FC = () => {
   const [sevisPassId, setSevisPassId] = useState('');
@@ -78,8 +80,11 @@ export const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+    <>
+      <Header />
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex flex-col">
+        <div className="flex-1 flex items-center justify-center px-4 py-12">
+          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
           <div className="text-center mb-8">
               <div className="flex items-center justify-center mb-4">
                 <div className="bg-gradient-to-br from-primary-500 to-primary-600 p-3 rounded-xl">
@@ -151,8 +156,11 @@ export const LoginPage: React.FC = () => {
         <p className="mt-4 text-xs text-center text-gray-500">
           For MVP demo: Default password is <span className="font-semibold">123456</span> for all accounts
         </p>
+          </div>
+        </div>
+        <Footer />
       </div>
-    </div>
+    </>
   );
 };
 

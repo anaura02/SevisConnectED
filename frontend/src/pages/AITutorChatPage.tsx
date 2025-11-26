@@ -5,6 +5,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { tutorApi } from '../api/services';
+import { Footer } from '../components/Footer';
 import type { ChatMessage } from '../types';
 
 export const AITutorChatPage: React.FC = () => {
@@ -83,8 +84,8 @@ export const AITutorChatPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex flex-col">
+      <div className="container mx-auto px-4 py-8 max-w-5xl flex-1">
         {/* Professional Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -332,6 +333,7 @@ export const AITutorChatPage: React.FC = () => {
           animation: fade-in 0.3s ease-out;
         }
       `}</style>
+      <Footer />
     </div>
   );
 };

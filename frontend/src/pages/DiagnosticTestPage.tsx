@@ -3,6 +3,7 @@
  * Practice tests and exams to prepare for assessments
  */
 import { Link } from 'react-router-dom';
+import { Footer } from '../components/Footer';
 
 export const DiagnosticTestPage: React.FC = () => {
   return (
@@ -105,6 +106,7 @@ export const DiagnosticTestPage: React.FC = () => {
           </Link>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

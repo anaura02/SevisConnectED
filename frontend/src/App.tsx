@@ -6,6 +6,7 @@ import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DiagnosticTestPage } from './pages/DiagnosticTestPage';
+import { ProgressPage } from './pages/ProgressPage';
 import { StudyPlanPage } from './pages/StudyPlanPage';
 import { AITutorChatPage } from './pages/AITutorChatPage';
 
@@ -70,12 +71,7 @@ function App() {
           path="/progress"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Progress Page</h1>
-                  <p className="text-gray-600">Coming soon...</p>
-                </div>
-              </div>
+              <ProgressPage />
             </ProtectedRoute>
           }
         />

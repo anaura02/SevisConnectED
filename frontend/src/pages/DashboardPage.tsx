@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { progressApi } from '../api/services';
+import { Footer } from '../components/Footer';
 import type { Progress } from '../types';
 
 // Progress Ring Component
@@ -463,6 +464,7 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

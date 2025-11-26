@@ -11,6 +11,7 @@ import { useStudyPlan } from '../context/StudyPlanContext';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { FloatingChatbot } from '../components/FloatingChatbot';
 import { PracticeExerciseModal } from '../components/PracticeExerciseModal';
+import { Footer } from '../components/Footer';
 import type { WeaknessProfile, LearningPath, Syllabus, LearningMaterial } from '../types';
 
 export const StudyPlanPage: React.FC = () => {
@@ -857,6 +858,7 @@ export const StudyPlanPage: React.FC = () => {
           onClose={handleCloseExercise}
         />
       )}
+      <Footer />
     </div>
   );
 };
