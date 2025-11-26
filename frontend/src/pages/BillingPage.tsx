@@ -3,11 +3,12 @@
  * Modern pricing page with multiple pricing models
  */
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 export const BillingPage: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState<'school' | 'individual' | 'ministry'>('school');
 
@@ -173,8 +174,23 @@ export const BillingPage: React.FC = () => {
 
   const handleSelectPlan = (planId: string) => {
     setSelectedPlan(planId);
-    // Here you would typically redirect to checkout or payment page
-    console.log('Selected plan:', planId);
+    
+    // Get the plan details
+    const currentPlans = getCurrentPlans();
+    const plan = currentPlans.find(p => p.id === planId);
+    
+    if (plan) {
+      // Navigate to checkout with plan details
+      navigate('/checkout', {
+        state: {
+          id: plan.id,
+          name: plan.name,
+          price: plan.price,
+          model: selectedModel,
+          studentRange: plan.studentRange,
+        },
+      });
+    }
   };
 
   const formatPrice = (price: number) => {

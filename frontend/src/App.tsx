@@ -8,6 +8,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { DiagnosticTestPage } from './pages/DiagnosticTestPage';
 import { ProgressPage } from './pages/ProgressPage';
 import { BillingPage } from './pages/BillingPage';
+import { CheckoutPage } from './pages/CheckoutPage';
 import { StudyPlanPage } from './pages/StudyPlanPage';
 import { AITutorChatPage } from './pages/AITutorChatPage';
 
@@ -33,6 +34,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/billing" element={<BillingPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
 
         {/* Protected Routes */}
         <Route
