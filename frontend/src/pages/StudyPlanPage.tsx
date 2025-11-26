@@ -36,6 +36,7 @@ export const StudyPlanPage: React.FC = () => {
   const [expandedNote, setExpandedNote] = useState<string | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<any | null>(null); // Selected practice exercise
   const [isExerciseModalOpen, setIsExerciseModalOpen] = useState(false);
+  const [deleteConfirmPlan, setDeleteConfirmPlan] = useState<LearningPath | null>(null); // Plan to be deleted
   
   // Card expansion states
   const [expandedCards, setExpandedCards] = useState({
@@ -184,18 +185,9 @@ export const StudyPlanPage: React.FC = () => {
                               </span>
                             )}
                             <button
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.stopPropagation();
-                                const planName = plan.syllabus?.title || `Study Plan ${plan.id.slice(0, 8)}`;
-                                if (window.confirm(`Are you sure you want to delete "${planName}"? This action cannot be undone.`)) {
-                                  if (user?.sevis_pass_id) {
-                                    try {
-                                      await deleteStudyPlan(plan.id, user.sevis_pass_id, subject);
-                                    } catch (err) {
-                                      console.error('Failed to delete study plan:', err);
-                                    }
-                                  }
-                                }
+                                setDeleteConfirmPlan(plan);
                               }}
                               className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
                               title="Delete study plan"
@@ -882,6 +874,58 @@ export const StudyPlanPage: React.FC = () => {
           onClose={handleCloseExercise}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmPlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-start mb-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Study Plan?</h3>
+                <p className="text-gray-600 mb-1">
+                  Are you sure you want to delete:
+                </p>
+                <p className="text-gray-900 font-semibold mb-4">
+                  "{deleteConfirmPlan.syllabus?.title || deleteConfirmPlan.title || `Study Plan ${deleteConfirmPlan.id.slice(0, 8)}`}"
+                </p>
+                <p className="text-sm text-red-600 font-medium">
+                  This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={async () => {
+                  if (user?.sevis_pass_id && deleteConfirmPlan) {
+                    try {
+                      await deleteStudyPlan(deleteConfirmPlan.id, user.sevis_pass_id, subject);
+                      setDeleteConfirmPlan(null);
+                    } catch (err) {
+                      console.error('Failed to delete study plan:', err);
+                    }
+                  }
+                }}
+                className="flex-1 bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => setDeleteConfirmPlan(null)}
+                className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </div>
   );
