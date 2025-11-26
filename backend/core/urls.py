@@ -24,6 +24,9 @@ urlpatterns = [
     # Learning path generation (PRD Section 4.4)
     path('generate/study-plan/', views.GenerateStudyPlanView.as_view(), name='generate_study_plan'),
     
+    # Get all saved study plans
+    path('study-plans/', views.GetStudyPlansView.as_view(), name='get_study_plans'),
+    
     # AI tutor chat (PRD Section 4.3)
     path('tutor/chat/', views.TutorChatView.as_view(), name='tutor_chat'),
     

@@ -454,21 +454,53 @@ class GenerateStudyPlanView(APIView):
             topic_scores=topic_scores if topic_scores else None
         )
         
-        # Create or update learning path with AI-generated data
-        learning_path, created = LearningPath.objects.update_or_create(
+        # Always create a new learning path (don't update existing ones)
+        # This allows students to have multiple saved study plans
+        learning_path = LearningPath.objects.create(
             user=user,
             subject=subject,
-            defaults={
-                'syllabus': path_data.get('syllabus', {}),
-                'week_plan': path_data.get('week_plan', {}),
-                'daily_tasks': path_data.get('daily_tasks', {}),
-                'status': 'active',
-            }
+            syllabus=path_data.get('syllabus', {}),
+            week_plan=path_data.get('week_plan', {}),
+            daily_tasks=path_data.get('daily_tasks', {}),
+            status='active',
         )
         
         return success_response(
             data=LearningPathSerializer(learning_path).data,
-            message='Learning path generated successfully' if created else 'Learning path updated'
+            message='Study plan generated and saved successfully'
+        )
+
+
+class GetStudyPlansView(APIView):
+    """
+    POST /api/study-plans/
+    Get all saved study plans for a student
+    Returns all study plans ordered by creation date (newest first)
+    """
+    def post(self, request):
+        sevis_pass_id = request.data.get('sevis_pass_id')
+        subject = request.data.get('subject', 'math')
+        
+        if not sevis_pass_id:
+            return error_response('SevisPass ID is required')
+        
+        try:
+            user = User.objects.get(sevis_pass_id=sevis_pass_id)
+        except User.DoesNotExist:
+            return error_response('User not found', http_status=404)
+        
+        # Get all learning paths for this user and subject, ordered by newest first
+        learning_paths = LearningPath.objects.filter(
+            user=user,
+            subject=subject
+        ).order_by('-created_at')
+        
+        return success_response(
+            data={
+                'study_plans': LearningPathSerializer(learning_paths, many=True).data,
+                'count': learning_paths.count()
+            },
+            message=f'Found {learning_paths.count()} saved study plan(s)'
         )
 
 

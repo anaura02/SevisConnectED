@@ -17,11 +17,14 @@ export const StudyPlanPage: React.FC = () => {
   const location = useLocation();
   const {
     learningPath,
+    studyPlans,
     weaknessProfile,
     loading,
     error,
     loadWeaknessProfile,
+    loadStudyPlans,
     generateLearningPath,
+    setActivePlan,
   } = useStudyPlan();
 
   const subject: 'math' = 'math';
@@ -36,22 +39,17 @@ export const StudyPlanPage: React.FC = () => {
     learningPath: false,
   });
 
-  // Load weakness profile and learning path when user changes
+  // Load saved study plans on mount (don't auto-generate)
   useEffect(() => {
     if (!user?.sevis_pass_id) return;
-    
-    if (weaknessProfile && learningPath) {
-      return;
-    }
 
     const loadData = async () => {
       try {
         if (!weaknessProfile) {
           await loadWeaknessProfile(user.sevis_pass_id, subject);
         }
-        if (!learningPath) {
-          await generateLearningPath(user.sevis_pass_id, subject);
-        }
+        // Load saved study plans instead of generating
+        await loadStudyPlans(user.sevis_pass_id, subject);
       } catch (err) {
         console.error('Failed to load study plan data:', err);
       }
@@ -111,6 +109,104 @@ export const StudyPlanPage: React.FC = () => {
               Comprehensive syllabus and personalized learning path for Grade {user?.grade_level} {subject}
             </p>
           </div>
+
+          {/* Generate New Study Plan Button */}
+          <div className="mb-6">
+            <button
+              onClick={handleGeneratePlan}
+              disabled={generating || loading}
+              className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-6 py-3 rounded-xl hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl font-medium flex items-center space-x-2"
+            >
+              {generating ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Generating Study Plan...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Generate New Study Plan</span>
+                </>
+              )}
+            </button>
+            <p className="text-sm text-gray-500 mt-2">
+              Generate a new personalized study plan based on your current performance
+            </p>
+          </div>
+
+          {/* Saved Study Plans - Display in Cards */}
+          {studyPlans.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Saved Study Plans</h2>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {studyPlans.map((plan, index) => {
+                  const planDate = plan.created_at ? new Date(plan.created_at) : new Date();
+                  const isActive = learningPath?.id === plan.id;
+                  
+                  return (
+                    <div
+                      key={plan.id || index}
+                      className={`bg-white rounded-xl shadow-lg border-2 transition-all hover:shadow-xl ${
+                        isActive 
+                          ? 'border-primary-500 ring-2 ring-primary-200' 
+                          : 'border-gray-200 hover:border-primary-300'
+                      }`}
+                    >
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            Study Plan #{studyPlans.length - index}
+                          </h3>
+                          {isActive && (
+                            <span className="bg-primary-100 text-primary-700 text-xs font-medium px-2 py-1 rounded-full">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                        
+                        {plan.syllabus?.title && (
+                          <p className="text-sm text-gray-600 mb-2 line-clamp-2">{plan.syllabus.title}</p>
+                        )}
+                        
+                        <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                          <span>
+                            {Object.keys(plan.week_plan || {}).length} weeks
+                          </span>
+                          <span className="capitalize">{plan.status}</span>
+                        </div>
+                        
+                        <div className="text-xs text-gray-500 mb-4">
+                          Created: {planDate.toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                        
+                        <button
+                          onClick={() => setActivePlan(plan)}
+                          className={`w-full px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                            isActive
+                              ? 'bg-primary-600 text-white hover:bg-primary-700'
+                              : 'bg-primary-100 text-primary-700 hover:bg-primary-200'
+                          }`}
+                        >
+                          {isActive ? 'Currently Viewing' : 'View This Plan'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Loading State */}
           {loading && !weaknessProfile && (
@@ -690,7 +786,21 @@ export const StudyPlanPage: React.FC = () => {
               </div>
             )}
 
-            {/* Empty State / Generate Button */}
+            {/* Empty State - No saved study plans */}
+            {!loading && studyPlans.length === 0 && !learningPath && weaknessProfile && (
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 text-center">
+                <div className="mb-4">
+                  <svg className="w-16 h-16 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Study Plans Yet</h3>
+                <p className="text-gray-600 mb-4">You haven't generated any study plans yet.</p>
+                <p className="text-sm text-gray-500 mb-6">Click "Generate New Study Plan" above to create your first personalized learning path.</p>
+              </div>
+            )}
+
+            {/* Empty State - No weakness profile */}
             {!loading && !weaknessProfile && !error && (
               <div className="bg-white rounded-lg shadow-md p-8 text-center">
                 <p className="text-gray-600 mb-4">
@@ -702,22 +812,6 @@ export const StudyPlanPage: React.FC = () => {
                 >
                   Take Diagnostic Test
                 </a>
-              </div>
-            )}
-
-            {/* Generate New Plan Button */}
-            {weaknessProfile && (
-              <div className="bg-white rounded-lg shadow-md p-6 text-center border border-gray-200">
-                <p className="text-gray-600 mb-4">
-                  Want to regenerate your study plan with updated information?
-                </p>
-                <button
-                  onClick={handleGeneratePlan}
-                  disabled={generating}
-                  className="bg-primary-600 text-white px-6 py-3 rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-                >
-                  {generating ? 'Generating...' : 'Generate New Study Plan'}
-                </button>
               </div>
             )}
           </div>

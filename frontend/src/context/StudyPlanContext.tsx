@@ -8,19 +8,23 @@ import { learningPathApi, performanceApi } from '../api/services';
 
 interface StudyPlanContextType {
   learningPath: LearningPath | null;
+  studyPlans: LearningPath[];  // Array of all saved study plans
   weaknessProfile: WeaknessProfile | null;
   loading: boolean;
   error: string | null;
   loadLearningPath: (sevisPassId: string, subject: 'math') => Promise<void>;
+  loadStudyPlans: (sevisPassId: string, subject: 'math') => Promise<void>;  // Load all saved plans
   loadWeaknessProfile: (sevisPassId: string, subject: 'math') => Promise<void>;
   generateLearningPath: (sevisPassId: string, subject: 'math') => Promise<void>;
   clearStudyPlan: () => void;
+  setActivePlan: (plan: LearningPath | null) => void;  // Set which plan to display
 }
 
 const StudyPlanContext = createContext<StudyPlanContextType | undefined>(undefined);
 
 export const StudyPlanProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [learningPath, setLearningPath] = useState<LearningPath | null>(null);
+  const [studyPlans, setStudyPlans] = useState<LearningPath[]>([]);  // All saved study plans
   const [weaknessProfile, setWeaknessProfile] = useState<WeaknessProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +62,30 @@ export const StudyPlanProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   }, []); // Empty deps - function doesn't depend on state
 
+  const loadStudyPlans = useCallback(async (sevisPassId: string, subject: 'math' = 'math') => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await learningPathApi.getAll(sevisPassId, subject);
+      
+      if (response.status === 'success' && response.data) {
+        const plans = response.data.study_plans || [];
+        setStudyPlans(plans);
+        // Set the most recent one as the active learning path if none is selected
+        if (plans.length > 0 && !learningPath) {
+          setLearningPath(plans[0]);  // Newest first (ordered by created_at desc)
+        }
+        console.log(`✅ Loaded ${plans.length} saved study plan(s)`);
+      }
+    } catch (err: any) {
+      console.error('Error loading study plans:', err);
+      setStudyPlans([]);
+      // Don't throw - just log error, allow page to show empty state
+    } finally {
+      setLoading(false);
+    }
+  }, [learningPath]); // Include learningPath to check if we should set default
+
   const generateLearningPath = useCallback(async (sevisPassId: string, subject: 'math' = 'math') => {
     try {
       setLoading(true);
@@ -69,13 +97,17 @@ export const StudyPlanProvider: React.FC<{ children: ReactNode }> = ({ children 
       });
 
       if (response.status === 'success' && response.data) {
-        setLearningPath(response.data);
+        const newPlan = response.data;
+        setLearningPath(newPlan);
+        
+        // Reload all study plans to include the new one
+        await loadStudyPlans(sevisPassId, subject);
         
         // Detailed logging to check what we received
-        const hasSyllabus = !!response.data.syllabus;
-        const syllabusModules = response.data.syllabus?.modules?.length || 0;
-        const weekCount = Object.keys(response.data.week_plan || {}).length;
-        const firstWeek = response.data.week_plan ? Object.values(response.data.week_plan)[0] : null;
+        const hasSyllabus = !!newPlan.syllabus;
+        const syllabusModules = newPlan.syllabus?.modules?.length || 0;
+        const weekCount = Object.keys(newPlan.week_plan || {}).length;
+        const firstWeek = newPlan.week_plan ? Object.values(newPlan.week_plan)[0] : null;
         const hasLearningMaterials = firstWeek?.learning_materials ? true : false;
         
         console.log('Learning Path Generated:', {
@@ -83,9 +115,9 @@ export const StudyPlanProvider: React.FC<{ children: ReactNode }> = ({ children 
           syllabus_modules: syllabusModules,
           week_count: weekCount,
           has_learning_materials: hasLearningMaterials,
-          syllabus_title: response.data.syllabus?.title || 'N/A',
+          syllabus_title: newPlan.syllabus?.title || 'N/A',
           first_week_focus: firstWeek?.focus || 'N/A',
-          week_plan_keys: Object.keys(response.data.week_plan || {}),
+          week_plan_keys: Object.keys(newPlan.week_plan || {}),
         });
         
         // Only warn if BOTH syllabus AND week_plan are empty (not just one)
@@ -115,7 +147,7 @@ export const StudyPlanProvider: React.FC<{ children: ReactNode }> = ({ children 
     } finally {
       setLoading(false);
     }
-  }, []); // Empty deps - function doesn't depend on state
+  }, [loadStudyPlans]); // Include loadStudyPlans dependency
 
   const loadLearningPath = async (sevisPassId: string, subject: 'math' = 'math') => {
     // For now, we'll generate it if it doesn't exist
@@ -132,21 +164,29 @@ export const StudyPlanProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const clearStudyPlan = () => {
     setLearningPath(null);
+    setStudyPlans([]);
     setWeaknessProfile(null);
     setError(null);
   };
+
+  const setActivePlan = useCallback((plan: LearningPath | null) => {
+    setLearningPath(plan);
+  }, []);
 
   return (
     <StudyPlanContext.Provider
       value={{
         learningPath,
+        studyPlans,
         weaknessProfile,
         loading,
         error,
         loadLearningPath,
+        loadStudyPlans,
         loadWeaknessProfile,
         generateLearningPath,
         clearStudyPlan,
+        setActivePlan,
       }}
     >
       {children}

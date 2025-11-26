@@ -132,6 +132,18 @@ export const learningPathApi = {
     const response = await apiClient.post<ApiResponse<LearningPath>>('/generate/study-plan/', data);
     return response.data;
   },
+  
+  /**
+   * Get all saved study plans for a student
+   * POST /api/study-plans/
+   */
+  getAll: async (sevisPassId: string, subject: 'math' = 'math'): Promise<ApiResponse<{ study_plans: LearningPath[], count: number }>> => {
+    const response = await apiClient.post<ApiResponse<{ study_plans: LearningPath[], count: number }>>('/study-plans/', {
+      sevis_pass_id: sevisPassId,
+      subject,
+    });
+    return response.data;
+  },
 };
 
 // ==================== AI Tutor Chat ====================
