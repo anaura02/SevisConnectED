@@ -304,7 +304,7 @@ export const DashboardPage: React.FC = () => {
                 </svg>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
-                Diagnostic Test
+                Exams & Tests
               </h3>
               <p className="text-sm text-gray-600">
                 Assess your strengths and identify areas for improvement

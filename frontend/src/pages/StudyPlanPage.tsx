@@ -280,7 +280,7 @@ export const StudyPlanPage: React.FC = () => {
                               {weaknessProfile.baseline_score.toFixed(1)}%
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
-                              Based on diagnostic test and academic performance analysis
+                              Based on practice test results and academic performance analysis
                             </p>
                             {weaknessProfile.baseline_score < 60 && (
                               <p className="text-sm text-red-600 mt-2 font-medium">
@@ -832,13 +832,13 @@ export const StudyPlanPage: React.FC = () => {
             {!loading && !weaknessProfile && !error && (
               <div className="bg-white rounded-lg shadow-md p-8 text-center">
                 <p className="text-gray-600 mb-4">
-                  No study plan available. Complete a diagnostic test first to generate your personalized learning path.
+                  No study plan available. Complete a practice test first to generate your personalized learning path.
                 </p>
                 <a
                   href="/diagnostic"
                   className="inline-block bg-primary-600 text-white px-6 py-3 rounded-md hover:bg-primary-700 transition-colors font-medium"
                 >
-                  Take Diagnostic Test
+                  Take Practice Test
                 </a>
               </div>
             )}
