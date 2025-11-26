@@ -144,6 +144,19 @@ export const learningPathApi = {
     });
     return response.data;
   },
+  
+  /**
+   * Delete a study plan
+   * DELETE /api/study-plan/<plan_id>/delete/
+   */
+  delete: async (planId: string, sevisPassId: string): Promise<ApiResponse<{ deleted_id: string }>> => {
+    const response = await apiClient.delete<ApiResponse<{ deleted_id: string }>>(`/study-plan/${planId}/delete/`, {
+      data: {
+        sevis_pass_id: sevisPassId,
+      },
+    });
+    return response.data;
+  },
 };
 
 // ==================== AI Tutor Chat ====================

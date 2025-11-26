@@ -27,6 +27,9 @@ urlpatterns = [
     # Get all saved study plans
     path('study-plans/', views.GetStudyPlansView.as_view(), name='get_study_plans'),
     
+    # Delete study plan
+    path('study-plan/<uuid:plan_id>/delete/', views.DeleteStudyPlanView.as_view(), name='delete_study_plan'),
+    
     # AI tutor chat (PRD Section 4.3)
     path('tutor/chat/', views.TutorChatView.as_view(), name='tutor_chat'),
     

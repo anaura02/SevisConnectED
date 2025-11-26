@@ -26,6 +26,7 @@ export const StudyPlanPage: React.FC = () => {
     loadWeaknessProfile,
     loadStudyPlans,
     generateLearningPath,
+    deleteStudyPlan,
     setActivePlan,
   } = useStudyPlan();
 
@@ -176,11 +177,34 @@ export const StudyPlanPage: React.FC = () => {
                           <h3 className="text-lg font-semibold text-gray-900">
                             Study Plan #{studyPlans.length - index}
                           </h3>
-                          {isActive && (
-                            <span className="bg-primary-100 text-primary-700 text-xs font-medium px-2 py-1 rounded-full">
-                              Active
-                            </span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {isActive && (
+                              <span className="bg-primary-100 text-primary-700 text-xs font-medium px-2 py-1 rounded-full">
+                                Active
+                              </span>
+                            )}
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const planName = plan.syllabus?.title || `Study Plan ${plan.id.slice(0, 8)}`;
+                                if (window.confirm(`Are you sure you want to delete "${planName}"? This action cannot be undone.`)) {
+                                  if (user?.sevis_pass_id) {
+                                    try {
+                                      await deleteStudyPlan(plan.id, user.sevis_pass_id, subject);
+                                    } catch (err) {
+                                      console.error('Failed to delete study plan:', err);
+                                    }
+                                  }
+                                }
+                              }}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                              title="Delete study plan"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                         
                         {plan.syllabus?.title && (

@@ -504,6 +504,37 @@ class GetStudyPlansView(APIView):
         )
 
 
+class DeleteStudyPlanView(APIView):
+    """
+    DELETE /api/study-plan/<plan_id>/delete/
+    Delete a study plan
+    """
+    def delete(self, request, plan_id):
+        sevis_pass_id = request.data.get('sevis_pass_id')
+        
+        if not sevis_pass_id:
+            return error_response('SevisPass ID is required')
+        
+        try:
+            user = User.objects.get(sevis_pass_id=sevis_pass_id)
+        except User.DoesNotExist:
+            return error_response('User not found', http_status=404)
+        
+        try:
+            learning_path = LearningPath.objects.get(id=plan_id, user=user)
+        except LearningPath.DoesNotExist:
+            return error_response('Study plan not found', http_status=404)
+        
+        # Delete the study plan
+        plan_title = learning_path.syllabus.get('title', f'Study Plan {learning_path.id}') if learning_path.syllabus else f'Study Plan {learning_path.id}'
+        learning_path.delete()
+        
+        return success_response(
+            data={'deleted_id': str(plan_id)},
+            message=f'Study plan "{plan_title}" deleted successfully'
+        )
+
+
 class TutorChatView(APIView):
     """
     POST /api/tutor/chat/

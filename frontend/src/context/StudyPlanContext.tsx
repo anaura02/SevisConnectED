@@ -16,6 +16,7 @@ interface StudyPlanContextType {
   loadStudyPlans: (sevisPassId: string, subject: 'math') => Promise<void>;  // Load all saved plans
   loadWeaknessProfile: (sevisPassId: string, subject: 'math') => Promise<void>;
   generateLearningPath: (sevisPassId: string, subject: 'math') => Promise<void>;
+  deleteStudyPlan: (planId: string, sevisPassId: string, subject: 'math') => Promise<void>;  // Delete a study plan
   clearStudyPlan: () => void;
   setActivePlan: (plan: LearningPath | null) => void;  // Set which plan to display
 }
@@ -173,6 +174,36 @@ export const StudyPlanProvider: React.FC<{ children: ReactNode }> = ({ children 
     setLearningPath(plan);
   }, []);
 
+  const deleteStudyPlan = useCallback(async (planId: string, sevisPassId: string, subject: 'math' = 'math') => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await learningPathApi.delete(planId, sevisPassId);
+      
+      if (response.status === 'success') {
+        // Remove the plan from the studyPlans array
+        setStudyPlans(prev => prev.filter(plan => plan.id !== planId));
+        
+        // If the deleted plan was the active one, clear it or set the first remaining plan
+        if (learningPath?.id === planId) {
+          const remainingPlans = studyPlans.filter(plan => plan.id !== planId);
+          setLearningPath(remainingPlans.length > 0 ? remainingPlans[0] : null);
+        }
+        
+        console.log('✅ Study plan deleted successfully');
+      } else {
+        throw new Error(response.message || 'Failed to delete study plan');
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to delete study plan';
+      setError(errorMessage);
+      console.error('Error deleting study plan:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [learningPath, studyPlans]);
+
   return (
     <StudyPlanContext.Provider
       value={{
@@ -185,6 +216,7 @@ export const StudyPlanProvider: React.FC<{ children: ReactNode }> = ({ children 
         loadStudyPlans,
         loadWeaknessProfile,
         generateLearningPath,
+        deleteStudyPlan,
         clearStudyPlan,
         setActivePlan,
       }}
